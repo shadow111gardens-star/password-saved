@@ -17,16 +17,13 @@ const faqs = [
   },
   {
     question: 'Is there a limit to how many passwords I can store?',
-    answer: 'No! Both Free and Pro plans include unlimited password storage. We believe you should never have to worry about running out of space.',
+    answer: 'Yes, the Free plan is limited to 5 saved passwords. To store unlimited passwords, you can upgrade to our Pro plan for just $5/month.',
   },
   {
     question: 'Can I share passwords with my team?',
     answer: 'Shared vaults are available on the Pro plan. You can create shared vaults for your team or family and control who has access to what.',
   },
-  {
-    question: 'Does VaultPass have a browser extension?',
-    answer: 'Yes, the Pro plan includes our browser extension for Chrome, Firefox, and Safari. It can auto-fill passwords and generate new ones on the fly.',
-  },
+
   {
     question: 'Can I import passwords from another manager?',
     answer: 'Pro users can import passwords from CSV files exported from other password managers like LastPass, 1Password, and Bitwarden.',
@@ -39,10 +36,7 @@ const faqs = [
     question: 'What encryption standard do you use?',
     answer: 'We use AES-256 encryption, the same standard trusted by governments, militaries, and financial institutions worldwide.',
   },
-  {
-    question: 'How do I cancel my Pro subscription?',
-    answer: 'You can cancel anytime from your account settings. Your Pro features will remain active until the end of your billing period.',
-  },
+  
 ];
 
 export default function FAQ() {

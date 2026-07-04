@@ -59,9 +59,9 @@ export default function Navbar({ onGetStarted }: NavbarProps) {
 
           {/* Right Actions */}
           <div className="hidden md:flex items-center gap-3">
-            <button className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
+            {/*<button className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
               Login with Google
-            </button>
+            </button>*/}
             <button onClick={onGetStarted} className="px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors shadow-sm shadow-primary-200">
               Get Started
             </button>

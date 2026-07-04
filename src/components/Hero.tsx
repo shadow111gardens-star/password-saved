@@ -67,12 +67,12 @@ export default function Hero({ onGetStarted }: HeroProps) {
               className="mt-8 flex flex-col sm:flex-row gap-3 justify-center lg:justify-start"
             >
               <button onClick={onGetStarted} className="px-6 py-3 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-xl transition-all shadow-lg shadow-primary-200 hover:shadow-xl hover:shadow-primary-200 hover:-translate-y-0.5">
-                Get Started Free
+                Login with Google
               </button>
-              <button className="px-6 py-3 text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2">
+              {/*<button className="px-6 py-3 text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2">
                 <Play className="w-4 h-4" />
                 Watch Demo
-              </button>
+              </button>*/}
             </motion.div>
 
             {/* Stats */}
