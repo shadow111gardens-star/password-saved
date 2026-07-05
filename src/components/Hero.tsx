@@ -16,7 +16,7 @@ const floatingCards = [
 ];
 
 interface HeroProps {
-  onGetStarted?: () => void;
+  onGetStarted: () => void;
 }
 
 export default function Hero({ onGetStarted }: HeroProps) {
@@ -170,7 +170,8 @@ export default function Hero({ onGetStarted }: HeroProps) {
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5, delay: 0.5 + card.delay }}
-                className={`absolute ${card.top ? '' : ''} hidden sm:block`}
+                className="absolute hidden sm:block"
+                //className={`absolute ${card.top ? '' : ''} hidden sm:block`}
                 style={{
                   top: card.top,
                   left: card.left,

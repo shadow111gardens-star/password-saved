@@ -1,12 +1,29 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { User, Mail, Shield, Pencil, Save, X, Check } from 'lucide-react';
+import { User as UserIcon, Mail, Shield, Pencil, Save, X, Check } from 'lucide-react';
+import { User } from 'firebase/auth';
 
-export default function ProfilePage() {
-  const [name, setName] = useState('Alex Smith');
-  const [email, setEmail] = useState('alex.smith@gmail.com');
+interface ProfilePageProps {
+  currentUser: User | null;
+}
+
+export default function ProfilePage({ currentUser }: ProfilePageProps) {
+  // નામ સેટ કરતી વખતે જો ખાલી 'abhay' હોય તો પણ પ્રોપર હેન્ડલ થશે
+  const [name, setName] = useState(currentUser?.displayName || 'Alex Smith');
+  const [email, setEmail] = useState(currentUser?.email || 'alex.smith@gmail.com');
   const [editMode, setEditMode] = useState(false);
   const [saved, setSaved] = useState(false);
+  
+  // ⚡ ઈમેજ લોડ ન થાય તો અલ્ટરનેટિવ બોક્સ બતાવવા માટેનું સ્ટેટ
+  const [imageError, setImageError] = useState(false);
+
+  useEffect(() => {
+    if (currentUser) {
+      setName(currentUser.displayName || 'Alex Smith');
+      setEmail(currentUser.email || 'alex.smith@gmail.com');
+      setImageError(false); // નવો યુઝર આવે ત્યારે એરર રીસેટ કરો
+    }
+  }, [currentUser]);
 
   const handleSave = () => {
     setEditMode(false);
@@ -15,16 +32,25 @@ export default function ProfilePage() {
   };
 
   const handleCancel = () => {
-    setName('Alex Smith');
-    setEmail('alex.smith@gmail.com');
+    setName(currentUser?.displayName || 'Alex Smith');
+    setEmail(currentUser?.email || 'alex.smith@gmail.com');
     setEditMode(false);
+  };
+
+  // નામ પરથી Initials (અક્ષરો) મેળવવાનું ફંક્શન
+  const getInitials = (fullName: string) => {
+    const parts = fullName.trim().split(' ');
+    if (parts.length > 1) {
+      return (parts[0][0] + parts[1][0]).toUpperCase(); // દા.ત. Abhay Solanki -> AS
+    }
+    return parts[0].slice(0, 2).toUpperCase(); // દા.ત. abhay -> AB
   };
 
   return (
     <div className="p-8 max-w-2xl mx-auto">
       <div className="flex items-center gap-3 mb-8">
         <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
-          <User className="w-5 h-5 text-blue-600" />
+          <UserIcon className="w-5 h-5 text-blue-600" />
         </div>
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Profile</h1>
@@ -42,11 +68,25 @@ export default function ProfilePage() {
         <div className="px-6 pb-6">
           <div className="relative -mt-12 mb-6 flex items-end justify-between">
             <div className="w-24 h-24 rounded-2xl bg-white p-1 shadow-lg">
-              <div className="w-full h-full rounded-xl bg-primary-100 flex items-center justify-center">
-                <span className="text-2xl font-bold text-primary-700">
-                  {name.split(' ').map((n) => n[0]).join('').toUpperCase()}
-                </span>
-              </div>
+              
+              {/* ⚡ ઈમેજ લોડ થાય અને કોઈ એરર ન હોય તો જ ફોટો બતાવશે */}
+              {currentUser?.photoURL && !imageError ? (
+                <img 
+                  src={currentUser.photoURL} 
+                  alt={name} 
+                  referrerPolicy="no-referrer" // ગૂગલ ઈમેજ બ્લોક ન થાય તે માટે
+                  onError={() => setImageError(true)} // જો ઈમેજ લોડ ન થાય તો આ ટ્રિગર થશે
+                  className="w-full h-full rounded-xl object-cover bg-slate-100"
+                />
+              ) : (
+                /* ⚡ જો ફોટો ન હોય અથવા લોડ થવામાં એરર આવે, તો આ સુંદર બ્લુ લેટર બોક્સ દેખાશે */
+                <div className="w-full h-full rounded-xl bg-primary-100 flex items-center justify-center border border-primary-200">
+                  <span className="text-2xl font-bold text-primary-700">
+                    {getInitials(name)}
+                  </span>
+                </div>
+              )}
+
             </div>
             {!editMode ? (
               <button
@@ -91,7 +131,7 @@ export default function ProfilePage() {
             {/* Name */}
             <div className="p-4 rounded-xl bg-slate-50">
               <div className="flex items-center gap-3 mb-2">
-                <User className="w-5 h-5 text-slate-400" />
+                <UserIcon className="w-5 h-5 text-slate-400" />
                 <span className="text-xs font-medium text-slate-500 uppercase">Name</span>
               </div>
               {editMode ? (

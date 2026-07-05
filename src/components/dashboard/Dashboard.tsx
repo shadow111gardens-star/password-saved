@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import type { User } from 'firebase/auth';
 import type { ViewType, PasswordEntry } from '../../types';
 import Sidebar from './Sidebar';
 import DashboardHome from './DashboardHome';
@@ -16,6 +17,7 @@ import { Lock, Unlock } from 'lucide-react';
 interface DashboardProps {
   view: ViewType;
   setView: (v: ViewType) => void;
+  currentUser: any;
   passwords: PasswordEntry[];
   addPassword: (entry: PasswordEntry) => void;
   updatePassword: (id: string, entry: Partial<PasswordEntry>) => void;
@@ -36,6 +38,7 @@ interface DashboardProps {
 export default function Dashboard({
   view,
   setView,
+  currentUser,
   passwords,
   addPassword,
   updatePassword,
@@ -146,7 +149,7 @@ export default function Dashboard({
       case 'notes':
         return <NotesPage passwords={passwords} updatePassword={updatePassword} />;
       case 'profile':
-        return <ProfilePage />;
+        return <ProfilePage currentUser={currentUser} />; 
       case 'settings':
         return (
           <SettingsPage
