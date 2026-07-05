@@ -2,11 +2,17 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Settings, Clock, AlertTriangle, Trash2, Check } from 'lucide-react';
 
+// ફાયરબેઝ મોડ્યુલ્સ
+import { auth, db } from '../../firebase'; 
+import { deleteUser } from 'firebase/auth';
+import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
+
 interface SettingsPageProps {
   autoLock: boolean;
   setAutoLock: (v: boolean) => void;
   timeoutMinutes: number;
   setTimeoutMinutes: (v: number) => void;
+  onLogout: () => void; // App.tsx માંથી રીડાયરેક્ટ માટે
 }
 
 export default function SettingsPage({
@@ -14,13 +20,49 @@ export default function SettingsPage({
   setAutoLock,
   timeoutMinutes,
   setTimeoutMinutes,
+  onLogout,
 }: SettingsPageProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
   const [saved, setSaved] = useState<boolean>(false);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
   const handleSave = () => {
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+  };
+
+  // 🚀 કોઈ મેસેજ કે પોપ-અપ વગર ડાયરેક્ટ ડીલીટ અને રીડાયરેક્ટ કરવાનું ફંક્શન
+  const handleDeleteAccount = async () => {
+    const currentUser = auth.currentUser;
+    if (!currentUser) return;
+
+    setIsDeleting(true);
+
+    try {
+      // ૧. ફાયરસ્ટોરમાંથી બધો ડેટા સાફ કરવો (કોઈ પૂછપરછ વગર)
+      const userPasswordsRef = collection(db, 'users', currentUser.uid, 'passwords');
+      const querySnapshot = await getDocs(userPasswordsRef);
+      
+      const deletePromises = querySnapshot.docs.map((document) => 
+        deleteDoc(doc(db, 'users', currentUser.uid, 'passwords', document.id))
+      );
+      await Promise.all(deletePromises);
+
+      // ૨. ફાયરબેઝમાંથી એકાઉન્ટ ડીલીટ કરવું
+      await deleteUser(currentUser);
+      
+      // ૩. સીધા હોમ પેજ પર ઓટોમેટિક રીડાયરેક્ટ કરો
+      onLogout();
+    } catch (error: any) {
+      console.error("Error deleting account:", error);
+      
+      // જો સેશન બહુ જૂનું હોય તો જ બાયપાસ કરવા માટે ડાયરેક્ટ લોગઆઉટ કરી દેવું જેથી યુઝર અટકે નહીં
+      if (error.code === 'auth/requires-recent-login') {
+        onLogout(); 
+      }
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -40,7 +82,7 @@ export default function SettingsPage({
         animate={{ opacity: 1, y: 0 }}
         className="space-y-6"
       >
-        {/* Security */}
+        {/* Security Section */}
         <div className="bg-white rounded-2xl border border-slate-200 p-6">
           <h3 className="text-sm font-semibold text-slate-900 mb-4">Security</h3>
           <div className="space-y-4">
@@ -82,7 +124,7 @@ export default function SettingsPage({
           </div>
         </div>
 
-        {/* Danger Zone */}
+        {/* Danger Zone Section */}
         <div className="bg-white rounded-2xl border border-red-200 p-6">
           <h3 className="text-sm font-semibold text-red-700 mb-4 flex items-center gap-2">
             <AlertTriangle className="w-4 h-4" />
@@ -102,22 +144,24 @@ export default function SettingsPage({
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowDeleteConfirm(false)}
-                  className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50"
+                  disabled={isDeleting}
+                  className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
-                  onClick={() => setShowDeleteConfirm(false)}
-                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-xl hover:bg-red-700"
+                  onClick={handleDeleteAccount} // 🚀 ક્લિક કરતાં જ સીધું ડીલીટ
+                  disabled={isDeleting}
+                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-xl hover:bg-red-700 disabled:opacity-50"
                 >
-                  Yes, Delete Account
+                  {isDeleting ? 'Deleting...' : 'Yes, Delete Account'}
                 </button>
               </div>
             </div>
           )}
         </div>
 
-        {/* Save */}
+        {/* Save Button */}
         <div className="flex justify-end">
           <button
             onClick={handleSave}

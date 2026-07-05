@@ -157,6 +157,7 @@ export default function Dashboard({
             setAutoLock={setAutoLock}
             timeoutMinutes={timeoutMinutes}
             setTimeoutMinutes={setTimeoutMinutes}
+            onLogout={onLogout}
           />
         );
       default:
