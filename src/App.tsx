@@ -1,12 +1,13 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import type { ViewType, PasswordEntry } from './types';
 import { CATEGORIES } from './types';
 import LandingPage from './components/LandingPage';
 import Dashboard from './components/dashboard/Dashboard';
 
-// Firebase માંથી જરૂરી ફંક્શન્સ અને ઓથોરિટી ઇમ્પોર્ટ કરો
-import { signInWithGoogle, auth } from './firebase'; 
-import { signOut, User } from 'firebase/auth';
+// Firebase માંથી જરૂરી ફંક્શન્સ અને કન્ફિગરેશન ઇમ્પોર્ટ કરો
+import { signInWithGoogle, auth, db } from './firebase'; 
+import { signOut, User, onAuthStateChanged } from 'firebase/auth';
+import { collection, onSnapshot, query, orderBy, addDoc } from 'firebase/firestore';
 
 export default function App() {
   const [view, setView] = useState<ViewType>('landing');
@@ -18,33 +19,70 @@ export default function App() {
   
   // ગૂગલ યુઝરનો ડેટા સ્ટોર કરવા માટે સ્ટેટ
   const [user, setUser] = useState<User | null>(null);
+  // લોડિંગ સ્ટેટ જેથી રીફ્રેશ વખતે પેજ ઝબકારો ન મારે
+  const [loading, setLoading] = useState(true);
 
   const allCategories = [...CATEGORIES, ...customCategories];
 
-  // ગૂગલ લોગીન હેન્ડલ કરવા માટેનું નવું અને સાચું ફંક્શન
-const handleGoogleLogin = useCallback(async () => {
-  try {
-    // 1. પહેલા Firebase નું પોપ-અપ ઓપન થશે અને પ્રોસેસ પૂરી થવાની રાહ જોશે
-    const loggedInUser = await signInWithGoogle();
-    
-    // 2. જો યુઝર ગૂગલ એકાઉન્ટ સિલેક્ટ કરીને સક્સેસફુલ લોગીન કરશે, તો જ અંદર જશે
-    if (loggedInUser) {
-      setUser(loggedInUser);
-      setView('dashboard'); // હવે લોગીન કન્ફર્મ થયા પછી જ ડેશબોર્ડ વ્યુ સેટ થશે
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
-      // જો યુઝર પોપ-અપ બંધ કરી દે અથવા લોગીન કેન્સલ કરે
-      console.log("Login cancelled or failed.");
-    }
-  } catch (error) {
-    console.error("Google Auth Error in App.tsx:", error);
-  }
-}, []);
+  // 🚀 ૧. રીફ્રેશ પ્રોબ્લેમ સોલ્વ કરવા માટે (Firebase Auth Session Listener)
+  useEffect(() => {
+    const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        // જો યુઝર ઓલરેડી લોગીન હશે, તો સીધો ડેશબોર્ડ વ્યુ સેટ થશે
+        setUser(firebaseUser);
+        setView('dashboard');
+      } else {
+        setUser(null);
+        setView('landing');
+      }
+      setLoading(false); // ચેકિંગ પૂરું થયું
+    });
 
-  // લોગઆઉટ હેન્ડલ કરવા માટેનું ફંક્શન (Firebase સાઇન-આઉટ સાથે)
+    return () => unsubscribeAuth();
+  }, []);
+
+  // 🚀 ૨. રિયલ-ટાઇમ ડેટા ફાયરબેઝમાંથી મેળવવા માટે (Real-time Fetching)
+  useEffect(() => {
+    if (!user) {
+      setPasswords([]); 
+      return;
+    }
+
+    const userPasswordsRef = collection(db, 'users', user.uid, 'passwords');
+    const q = query(userPasswordsRef, orderBy('createdAt', 'desc'));
+
+    const unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
+      const fetchedPasswords = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as PasswordEntry[];
+      
+      setPasswords(fetchedPasswords);
+    }, (error) => {
+      console.error("Firestore snapshot error:", error);
+    });
+
+    return () => unsubscribeSnapshot();
+  }, [user]);
+
+  // ગૂગલ લોગીન હેન્ડલ કરવા માટેનું ફંક્શન
+  const handleGoogleLogin = useCallback(async () => {
+    try {
+      const loggedInUser = await signInWithGoogle();
+      if (loggedInUser) {
+        setUser(loggedInUser);
+        setView('dashboard'); 
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    } catch (error) {
+      console.error("Google Auth Error in App.tsx:", error);
+    }
+  }, []);
+
+  // લોગઆઉટ હેન્ડલ કરવા માટેનું ફંક્શન
   const handleLogout = useCallback(async () => {
     try {
-      await signOut(auth); // Firebase માંથી લોગઆઉટ થશે
+      await signOut(auth); 
       setUser(null);
       setView('landing');
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -53,9 +91,35 @@ const handleGoogleLogin = useCallback(async () => {
     }
   }, []);
 
-  const addPassword = useCallback((entry: PasswordEntry) => {
-    setPasswords((prev) => [entry, ...prev]);
-  }, []);
+  // પાસવર્ડ ફાયરબેઝમાં સેવ કરવાનું ફંક્શન
+  const addPassword = useCallback(async (entry: Partial<PasswordEntry>) => {
+    try {
+      if (!user) {
+        console.error("યુઝર લોગિન નથી!");
+        return;
+      }
+
+      const userPasswordsRef = collection(db, 'users', user.uid, 'passwords');
+      
+      await addDoc(userPasswordsRef, {
+        websiteName: entry.websiteName || '',
+        websiteUrl: entry.websiteUrl || '',
+        username: entry.username || '',
+        email: entry.email || '',
+        password: entry.password || '',
+        category: entry.category || 'Personal',
+        tags: entry.tags || [],
+        notes: entry.notes || '',
+        favorite: entry.favorite || false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+
+      console.log("Password saved to Firebase perfectly!");
+    } catch (error) {
+      console.error("Error saving password to Firebase:", error);
+    }
+  }, [user]);
 
   const updatePassword = useCallback((id: string, entry: Partial<PasswordEntry>) => {
     setPasswords((prev) =>
@@ -87,7 +151,15 @@ const handleGoogleLogin = useCallback(async () => {
     );
   }, []);
 
-  // જો લેન્ડિંગ પેજ હોય તો ગૂગલ લોગીન ફંક્શન પાસ કરો
+  // જો ફાયરબેઝ સેશન ચેક કરી રહ્યું હોય ત્યાં સુધી સ્ક્રીન લોડિંગ બતાવવી
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600"></div>
+      </div>
+    );
+  }
+
   if (view === 'landing') {
     return <LandingPage onGetStarted={handleGoogleLogin} />;
   }
@@ -97,7 +169,7 @@ const handleGoogleLogin = useCallback(async () => {
       view={view}
       setView={setView}
       passwords={passwords}
-      addPassword={addPassword}
+      addPassword={addPassword} 
       updatePassword={updatePassword}
       deletePassword={deletePassword}
       toggleFavorite={toggleFavorite}
@@ -111,7 +183,7 @@ const handleGoogleLogin = useCallback(async () => {
       timeoutMinutes={timeoutMinutes}
       setTimeoutMinutes={setTimeoutMinutes}
       onLogout={handleLogout}
-      currentUser={user} // જો ડેશબોર્ડમાં યુઝર પ્રોફાઇલ બતાવવી હોય તો આ કામ આવશે
+      currentUser={user} 
     />
   );
 }

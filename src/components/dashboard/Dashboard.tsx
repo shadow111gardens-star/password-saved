@@ -19,7 +19,7 @@ interface DashboardProps {
   setView: (v: ViewType) => void;
   currentUser: any;
   passwords: PasswordEntry[];
-  addPassword: (entry: PasswordEntry) => void;
+  addPassword: (entry: Partial<PasswordEntry>) => void; 
   updatePassword: (id: string, entry: Partial<PasswordEntry>) => void;
   deletePassword: (id: string) => void;
   toggleFavorite: (id: string) => void;
@@ -40,7 +40,7 @@ export default function Dashboard({
   setView,
   currentUser,
   passwords,
-  addPassword,
+  addPassword, // 🚀 App.tsx માંથી આવતું ફાયરબેઝ ફંક્શન
   updatePassword,
   deletePassword,
   toggleFavorite,
@@ -112,7 +112,7 @@ export default function Dashboard({
         return (
           <PasswordVault
             passwords={passwords}
-            addPassword={addPassword}
+            addPassword={addPassword} // 🚀 App.tsx નું ડાયરેક્ટ ફંક્શન અહીં કનેક્ટ કર્યું
             updatePassword={updatePassword}
             deletePassword={deletePassword}
             toggleFavorite={toggleFavorite}

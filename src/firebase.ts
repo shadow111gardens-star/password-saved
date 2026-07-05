@@ -1,6 +1,8 @@
 // src/firebase.ts
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup, User } from "firebase/auth";
+// 1. Firestore ના જરૂરી મોડ્યુલ્સ અહીં ઈમ્પોર્ટ કરો 👇
+import { getFirestore, collection, addDoc, getDocs, query, where } from "firebase/firestore";
 
 // તમારી સાચી Firebase કીઝ અહીં સેટ કરી દીધી છે
 const firebaseConfig = {
@@ -18,6 +20,10 @@ const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
+
+// 2. Firestore નો ડેટાબેઝ ઈનિશિયલાઈઝ કરો અને એક્સપોર્ટ કરો 👇
+export const db = getFirestore(app);
+export { collection, addDoc, getDocs, query, where };
 
 // Google Login ફંક્શન
 export const signInWithGoogle = async (): Promise<User | null> => {
