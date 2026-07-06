@@ -1,3 +1,4 @@
+// src/components/Dashboard.tsx
 import { useEffect, useRef, useState, useCallback } from 'react';
 import type { User } from 'firebase/auth';
 import type { ViewType, PasswordEntry } from '../../types';
@@ -12,7 +13,7 @@ import ImportExport from './ImportExport';
 import NotesPage from './NotesPage';
 import ProfilePage from './ProfilePage';
 import SettingsPage from './SettingsPage';
-import { Lock, Unlock } from 'lucide-react';
+import { Lock, Unlock, ShieldAlert } from 'lucide-react'; // ShieldAlert અહિં ઉમેર્યું છે 🍿
 
 interface DashboardProps {
   view: ViewType;
@@ -40,7 +41,7 @@ export default function Dashboard({
   setView,
   currentUser,
   passwords,
-  addPassword, // 🚀 App.tsx માંથી આવતું ફાયરબેઝ ફંક્શન
+  addPassword, 
   updatePassword,
   deletePassword,
   toggleFavorite,
@@ -59,6 +60,20 @@ export default function Dashboard({
   const lastActivityRef = useRef(Date.now());
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isLockedRef = useRef(false);
+
+  // 🚀 1. યુઝરનો રોલ (free કે pro) ગેટ કરો (જો ના મળે તો બાય ડિફોલ્ટ 'free')
+  const userRole = currentUser?.role || 'free';
+  const isPro = userRole === 'pro';
+  const passwordCount = passwords.length;
+
+  // 🚀 2. કસ્ટમ એડ પાસવર્ડ ફંક્શન (લિમિટ ચેક કરવા માટે)
+  const handleAddPasswordWithLimit = (entry: Partial<PasswordEntry>) => {
+    if (!isPro && passwordCount >= 5) {
+      alert("⚠️ You have reached the free tier limit of 5 passwords. Please upgrade to PRO to add unlimited vault entries!");
+      return;
+    }
+    addPassword(entry); // જો પ્રો હોય અથવા કાઉન્ટ < 5 હોય તો જ સેવ થશે
+  };
 
   // Keep ref in sync with state
   isLockedRef.current = isLocked;
@@ -104,20 +119,48 @@ export default function Dashboard({
     setIsLocked(false);
   };
 
+  // 🚀 3. પ્રીમિયમ ફીચર્સ માટે લોક સ્ક્રીન કમ્પોનન્ટ
+  const renderPremiumLock = (featureName: string) => {
+    // ફીચરના નામ પ્રમાણે અલગ ડિસ્ક્રિપ્શન સેટ કરવા માટે:
+    const descriptionText = featureName === "Password Generator"
+      ? "Upgrade your account to unlock our premium, ultra-secure password generator and create highly advanced keys."
+      : "Upgrade to PRO to safely backup, export, or migrate your entire vault data anytime you want.";
+
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6">
+        <div className="w-16 h-16 rounded-2xl bg-amber-50 dark:bg-amber-950/30 flex items-center justify-center mb-4 animate-bounce">
+          <ShieldAlert className="w-8 h-8 text-amber-500" />
+        </div>
+        <h2 className="text-2xl font-bold !text-black dark:!text-black mb-2">
+          {featureName} is for PRO Users Only!
+        </h2>
+        {/* 👇 અહીં સબ-ટેક્સ્ટ ડાયનેમિકલી ચેન્જ થશે અને કલર પણ વ્યવસ્થિત દેખાશે */}
+        <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm mb-6">
+          {descriptionText}
+        </p>
+        <button className="px-6 py-3 font-semibold text-white bg-gradient-to-r from-amber-500 to-orange-600 rounded-xl shadow-lg hover:opacity-90 transition-opacity">
+          Upgrade to Pro ⭐
+        </button>
+      </div>
+    );
+  };
+
   const renderContent = () => {
     switch (view) {
       case 'dashboard':
+        // 🛠️ 'userRole' પ્રોપ હટાવી દીધો જેથી TS Error સોલ્વ થઈ જાય
         return <DashboardHome passwords={passwords} setView={setView} />;
       case 'vault':
         return (
           <PasswordVault
             passwords={passwords}
-            addPassword={addPassword} // 🚀 App.tsx નું ડાયરેક્ટ ફંક્શન અહીં કનેક્ટ કર્યું
+            addPassword={handleAddPasswordWithLimit} // આ લિમિટ વાળું ફંક્શન ચાલુ રહેશે 🚀
             updatePassword={updatePassword}
             deletePassword={deletePassword}
             toggleFavorite={toggleFavorite}
             allCategories={allCategories}
             addCustomCategory={addCustomCategory}
+            // 🛠️ 'isPro' હટાવી દીધો જેથી TS Error સોલ્વ થઈ જાય
           />
         );
       case 'favorites':
@@ -141,11 +184,11 @@ export default function Dashboard({
           />
         );
       case 'generator':
-        return <PasswordGenerator />;
+        return isPro ? <PasswordGenerator /> : renderPremiumLock("Password Generator");
       case 'security':
         return <SecurityCenter passwords={passwords} />;
       case 'importexport':
-        return <ImportExport passwords={passwords} addPassword={addPassword} />;
+        return isPro ? <ImportExport passwords={passwords} addPassword={handleAddPasswordWithLimit} /> : renderPremiumLock("Import & Export");
       case 'notes':
         return <NotesPage passwords={passwords} updatePassword={updatePassword} />;
       case 'profile':
@@ -172,12 +215,16 @@ export default function Dashboard({
         setView={setView}
         darkMode={darkMode}
         onLogout={onLogout}
+        // 🛠️ 'userRole' હટાવી દીધો જેથી સાઇડબારની TS Error સોલ્વ થઈ જાય
       />
       <main className="flex-1 overflow-auto relative">
         {renderContent()}
+        
+        {/* Auto Lock Overlay સેમ રહેશે... */}
 
         {/* Auto Lock Overlay */}
         {isLocked && (
+          // ... (બાકીનો લોક ઓવરલે કોડ સેમ રહેશે)
           <div className="absolute inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center">
             <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full mx-4 text-center">
               <div className="w-16 h-16 rounded-2xl bg-primary-50 flex items-center justify-center mx-auto mb-4">

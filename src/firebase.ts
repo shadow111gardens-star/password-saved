@@ -1,10 +1,9 @@
 // src/firebase.ts
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup, User } from "firebase/auth";
-// 1. Firestore ના જરૂરી મોડ્યુલ્સ અહીં ઈમ્પોર્ટ કરો 👇
-import { getFirestore, collection, addDoc, getDocs, query, where } from "firebase/firestore";
+// 1. doc, setDoc, અને getDoc અહીં ઉમેર્યા છે 👇
+import { getFirestore, collection, addDoc, getDocs, query, where, doc, setDoc, getDoc } from "firebase/firestore";
 
-// તમારી સાચી Firebase કીઝ અહીં સેટ કરી દીધી છે
 const firebaseConfig = {
   apiKey: "AIzaSyCFvzMFSb68enwpsItyPO_YLLjxiyBOTLo",
   authDomain: "password-saved.firebaseapp.com",
@@ -21,15 +20,37 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
-// 2. Firestore નો ડેટાબેઝ ઈનિશિયલાઈઝ કરો અને એક્સપોર્ટ કરો 👇
 export const db = getFirestore(app);
 export { collection, addDoc, getDocs, query, where };
 
-// Google Login ફંક્શન
+// Google Login ફંક્શન (હવે આ યુઝરનો રોલ પણ મેનેજ કરશે)
 export const signInWithGoogle = async (): Promise<User | null> => {
   try {
     const result = await signInWithPopup(auth, googleProvider);
-    return result.user; // લોગીન થયેલા યુઝરનો ડેટા રિટર્ન કરશે
+    const user = result.user;
+
+    if (user) {
+      // ૧. users કલેક્શનમાં યુઝરના UID વાળા ડોક્યુમેન્ટનો રેફરન્સ લો
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+
+      // ૨. જો યુઝર નવો હોય, તો ડેટાબેઝમાં "free" પ્લાન સાથે એન્ટ્રી પાડો
+      if (!userSnap.exists()) {
+        await setDoc(userRef, {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName,
+          photoURL: user.photoURL,
+          role: "free", // બાય ડિફોલ્ટ નવો યુઝર "free" રહેશે
+          createdAt: new Date()
+        });
+        console.log("નવો યુઝર 'free' પ્લાન સાથે રજીસ્ટર થયો!");
+      } else {
+        console.log("જૂનો યુઝર છે, ઓલરેડી ડેટાબેઝમાં અવેલેબલ છે.");
+      }
+    }
+
+    return user; 
   } catch (error) {
     console.error("Google Auth Error:", error);
     return null;

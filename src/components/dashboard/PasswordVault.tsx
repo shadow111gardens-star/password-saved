@@ -680,6 +680,8 @@ interface PasswordVaultProps {
   toggleFavorite: (id: string) => Promise<void> | void;
   allCategories: string[];
   addCustomCategory: (category: string) => void;
+  isPro?: boolean;
+  passwordCount?: number;
 }
 
 export default function PasswordVault({
@@ -690,6 +692,8 @@ export default function PasswordVault({
   toggleFavorite,
   allCategories,
   addCustomCategory,
+  isPro = false,
+  //passwordCount = 0,
 }: PasswordVaultProps) {
   const [search, setSearch] = useState('');
   const [filterCategory, setFilterCategory] = useState('All');
@@ -735,7 +739,10 @@ export default function PasswordVault({
     setShowPasswords((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  return (
+  // 🚀 લિમિટ ચેક કરવાનું લોજિક
+  const isLimitReached = !isPro && passwords.length >= 5;
+
+ return (
     <div className="p-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
@@ -743,12 +750,18 @@ export default function PasswordVault({
           <h1 className="text-2xl font-bold text-slate-900">Password Vault</h1>
           <p className="text-sm text-slate-500 mt-1">Manage all your stored credentials.</p>
         </div>
+        {/* 👇 આ રહ્યું તમારું નવું કન્ડિશનલ બટન */}
         <button
+          disabled={isLimitReached}
           onClick={() => { setEditingPassword(null); setShowAddModal(true); }}
-          className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors shadow-sm"
+          className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-white rounded-xl transition-all shadow-sm ${
+            isLimitReached 
+              ? 'bg-slate-300 dark:bg-slate-700 text-slate-400 cursor-not-allowed opacity-60' 
+              : 'bg-blue-600 hover:bg-blue-700'
+          }`}
         >
           <Plus className="w-4 h-4" />
-          Add Password
+          {isLimitReached ? "Limit Reached (PRO)" : "Add Password"}
         </button>
       </div>
 
@@ -952,6 +965,7 @@ export default function PasswordVault({
         {showAddModal && (
           <AddEditModal
             editing={editingPassword}
+            isLimitReached={isLimitReached}
             onClose={() => { setShowAddModal(false); setEditingPassword(null); }}
             allCategories={allCategories}
             addCustomCategory={addCustomCategory}
@@ -990,12 +1004,14 @@ export default function PasswordVault({
    ========================================== */
 function AddEditModal({
   editing,
+  isLimitReached,
   onClose,
   onSave,
   allCategories,
   addCustomCategory,
 }: {
   editing: PasswordEntry | null;
+  isLimitReached: boolean;
   onClose: () => void;
   onSave: (entry: Partial<PasswordEntry>) => void;
   allCategories: string[];
@@ -1178,6 +1194,7 @@ function AddEditModal({
               className="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
             />
           </div>
+          {/* 👇 આખા બટન ગ્રુપને આનાથી રિપ્લેસ કરો */}
           <div className="flex gap-3 pt-2">
             <button
               type="button"
@@ -1188,7 +1205,12 @@ function AddEditModal({
             </button>
             <button
               type="submit"
-              className="flex-1 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700"
+              disabled={!editing && isLimitReached}
+              className={`flex-1 py-2.5 text-sm font-medium text-white rounded-xl transition-all ${
+                (!editing && isLimitReached)
+                  ? 'bg-slate-300 text-slate-400 cursor-not-allowed opacity-60'
+                  : 'bg-blue-600 hover:bg-blue-700'
+              }`}
             >
               {editing ? 'Update Password' : 'Save Password'}
             </button>
