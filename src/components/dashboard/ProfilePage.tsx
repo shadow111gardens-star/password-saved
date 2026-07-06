@@ -87,7 +87,7 @@ export default function ProfilePage({ currentUser }: ProfilePageProps) {
                 </div>
               )}
 
-            </div>
+            </div>{/*}
             {!editMode ? (
               <button
                 onClick={() => setEditMode(true)}
@@ -113,7 +113,7 @@ export default function ProfilePage({ currentUser }: ProfilePageProps) {
                   Save
                 </button>
               </div>
-            )}
+            )}*/}
           </div>
 
           {saved && (

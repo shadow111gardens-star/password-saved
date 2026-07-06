@@ -160,7 +160,9 @@ export default function Dashboard({
             toggleFavorite={toggleFavorite}
             allCategories={allCategories}
             addCustomCategory={addCustomCategory}
-            // 🛠️ 'isPro' હટાવી દીધો જેથી TS Error સોલ્વ થઈ જાય
+            isPro={isPro}
+            passwordCount={passwords.length}
+
           />
         );
       case 'favorites':

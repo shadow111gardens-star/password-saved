@@ -7,7 +7,7 @@ import Dashboard from './components/dashboard/Dashboard';
 // Firebase માંથી જરૂરી ફંક્શન્સ અને કન્ફિગરેશન ઇમ્પોર્ટ કરો
 import { signInWithGoogle, auth, db } from './firebase'; 
 import { signOut, User, onAuthStateChanged } from 'firebase/auth';
-import { collection, onSnapshot, query, orderBy, addDoc } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, doc, DocumentSnapshot, deleteDoc } from 'firebase/firestore';
 
 export default function App() {
   const [view, setView] = useState<ViewType>('landing');
@@ -17,31 +17,33 @@ export default function App() {
   const [autoLock, setAutoLock] = useState(true);
   const [timeoutMinutes, setTimeoutMinutes] = useState(15);
   
-  // ગૂગલ યુઝરનો ડેટા સ્ટોર કરવા માટે સ્ટેટ
+  // ગૂગલ યુઝરનો ઓથ ડેટા
   const [user, setUser] = useState<User | null>(null);
-  // લોડિંગ સ્ટેટ જેથી રીફ્રેશ વખતે પેજ ઝબકારો ન મારે
+  // ડેટાબેઝમાંથી આવતો યુઝરનો લાઈવ પ્રોફાઈલ (role) ડેટા
+  const [userProfile, setUserProfile] = useState<any>(null);
+  // લોડિંગ સ્ટેટ
   const [loading, setLoading] = useState(true);
 
   const allCategories = [...CATEGORIES, ...customCategories];
 
-  // 🚀 ૧. રીફ્રેશ પ્રોબ્લેમ સોલ્વ કરવા માટે (Firebase Auth Session Listener)
+  // 🚀 ૧. ઓથ સેશન લિસનર
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
       if (firebaseUser) {
-        // જો યુઝર ઓલરેડી લોગીન હશે, તો સીધો ડેશબોર્ડ વ્યુ સેટ થશે
         setUser(firebaseUser);
         setView('dashboard');
       } else {
         setUser(null);
+        setUserProfile(null);
         setView('landing');
       }
-      setLoading(false); // ચેકિંગ પૂરું થયું
+      setLoading(false);
     });
 
     return () => unsubscribeAuth();
   }, []);
 
-  // 🚀 ૨. રિયલ-ટાઇમ ડેટા ફાયરબેઝમાંથી મેળવવા માટે (Real-time Fetching)
+  // 🚀 ૨. રિયલ-ટાઇમ પાસવર્ડ ડેટા ફાયરબેઝમાંથી મેળવવા માટે
   useEffect(() => {
     if (!user) {
       setPasswords([]); 
@@ -49,23 +51,40 @@ export default function App() {
     }
 
     const userPasswordsRef = collection(db, 'users', user.uid, 'passwords');
-    const q = query(userPasswordsRef, orderBy('createdAt', 'desc'));
-
-    const unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
-      const fetchedPasswords = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
+    const unsubscribeSnapshot = onSnapshot(userPasswordsRef, (snapshot) => {
+      const fetchedPasswords = snapshot.docs.map((docSnap) => ({
+        id: docSnap.id,
+        ...docSnap.data(),
       })) as PasswordEntry[];
       
       setPasswords(fetchedPasswords);
-    }, (error) => {
+    }, (error: Error) => {
       console.error("Firestore snapshot error:", error);
     });
 
     return () => unsubscribeSnapshot();
   }, [user]);
 
-  // ગૂગલ લોગીન હેન્ડલ કરવા માટેનું ફંક્શન
+  // 🚀 ૩. યુઝરનો પ્રોફાઈલ ડેટા (role) ફાયરબેઝમાંથી લાઈવ મેળવવા માટે
+  useEffect(() => {
+    if (!user) {
+      setUserProfile(null);
+      return;
+    }
+
+    const userDocRef = doc(db, 'users', user.uid);
+    const unsubscribeUser = onSnapshot(userDocRef, (docSnap: DocumentSnapshot) => {
+      if (docSnap.exists()) {
+        setUserProfile(docSnap.data()); 
+      }
+    }, (error: Error) => {
+      console.error("User profile snapshot error:", error);
+    });
+
+    return () => unsubscribeUser();
+  }, [user]);
+
+  // ગૂગલ લોગીન ફંક્શન
   const handleGoogleLogin = useCallback(async () => {
     try {
       const loggedInUser = await signInWithGoogle();
@@ -79,11 +98,12 @@ export default function App() {
     }
   }, []);
 
-  // લોગઆઉટ હેન્ડલ કરવા માટેનું ફંક્શન
+  // લોગઆઉટ ફંક્શન
   const handleLogout = useCallback(async () => {
     try {
       await signOut(auth); 
       setUser(null);
+      setUserProfile(null);
       setView('landing');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
@@ -91,16 +111,11 @@ export default function App() {
     }
   }, []);
 
-  // પાસવર્ડ ફાયરબેઝમાં સેવ કરવાનું ફંક્શન
+  // પાસવર્ડ એડ કરવાનું ફંક્શન
   const addPassword = useCallback(async (entry: Partial<PasswordEntry>) => {
     try {
-      if (!user) {
-        console.error("યુઝર લોગિન નથી!");
-        return;
-      }
-
+      if (!user) return;
       const userPasswordsRef = collection(db, 'users', user.uid, 'passwords');
-      
       await addDoc(userPasswordsRef, {
         websiteName: entry.websiteName || '',
         websiteUrl: entry.websiteUrl || '',
@@ -114,10 +129,8 @@ export default function App() {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       });
-
-      console.log("Password saved to Firebase perfectly!");
     } catch (error) {
-      console.error("Error saving password to Firebase:", error);
+      console.error("Error saving password:", error);
     }
   }, [user]);
 
@@ -127,9 +140,23 @@ export default function App() {
     );
   }, []);
 
-  const deletePassword = useCallback((id: string) => {
+  
+    const deletePassword = useCallback(async (id: string) => {
+  try {
+    if (!user) return;
+    
+    // ફાયરબેઝમાંથી તે પાસવર્ડ ડોક્યુમેન્ટ ડિલીટ કરો
+    const passwordDocRef = doc(db, 'users', user.uid, 'passwords', id);
+    await deleteDoc(passwordDocRef);
+    
+    // લોકલ સ્ટેટમાંથી પણ અપડેટ કરો (જેથી સ્ક્રીન પરથી તરત ગાયબ થઈ જાય)
     setPasswords((prev) => prev.filter((p) => p.id !== id));
-  }, []);
+    console.log("Password deleted successfully from Firebase!");
+  } catch (error) {
+    console.error("Error deleting password:", error);
+  }
+}, [user]);
+    
 
   const toggleFavorite = useCallback((id: string) => {
     setPasswords((prev) =>
@@ -151,7 +178,6 @@ export default function App() {
     );
   }, []);
 
-  // જો ફાયરબેઝ સેશન ચેક કરી રહ્યું હોય ત્યાં સુધી સ્ક્રીન લોડિંગ બતાવવી
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -183,7 +209,7 @@ export default function App() {
       timeoutMinutes={timeoutMinutes}
       setTimeoutMinutes={setTimeoutMinutes}
       onLogout={handleLogout}
-      currentUser={user} 
+      currentUser={userProfile} // 👈 'userProfile' પાસ કર્યું જેથી લાઈવ અપડેટ થાય!
     />
   );
 }
