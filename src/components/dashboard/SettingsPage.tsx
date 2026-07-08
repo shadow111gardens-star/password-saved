@@ -5,7 +5,7 @@ import { Settings, Clock, AlertTriangle, Trash2, Check } from 'lucide-react';
 // ફાયરબેઝ મોડ્યુલ્સ
 import { auth, db } from '../../firebase'; 
 import { deleteUser } from 'firebase/auth';
-import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 
 interface SettingsPageProps {
   autoLock: boolean;
@@ -26,9 +26,32 @@ export default function SettingsPage({
   const [saved, setSaved] = useState<boolean>(false);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  const handleSave = async () => {
+    const currentUser = auth.currentUser;
+    if (!currentUser) return;
+
+    // 🚀 ૧. સેવિંગ પ્રોસેસ શરૂ થાય એટલે લોડિંગ ચાલુ કરો
+    setIsDeleting(true); // તમે આ સ્ટેટનો અથવા નવો [isSaving, setIsSaving] નો ઉપયોગ કરી શકો
+
+    try {
+      const userDocRef = doc(db, 'users', currentUser.uid);
+
+      // ડેટાબેઝમાં સેવ કરો
+      await updateDoc(userDocRef, {
+        autoLock: autoLock,
+        timeoutMinutes: timeoutMinutes,
+        updatedAt: new Date().toISOString()
+      });
+
+      // 🚀 ૨. સેવ થઈ ગયા પછી જ "Saved!" મેસેજ બતાવો
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (error) {
+      console.error("Error saving settings to Firebase:", error);
+    } finally {
+      // 🚀 ૩. પ્રોસેસ પૂરી થતાં લોડિંગ બંધ કરો
+      setIsDeleting(false); 
+    }
   };
 
   // 🚀 કોઈ મેસેજ કે પોપ-અપ વગર ડાયરેક્ટ ડીલીટ અને રીડાયરેક્ટ કરવાનું ફંક્શન
@@ -165,10 +188,11 @@ export default function SettingsPage({
         <div className="flex justify-end">
           <button
             onClick={handleSave}
-            className="flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-xl transition-colors"
+            disabled={isDeleting} // સેવિંગ વખતે બટન ડીસેબલ થઈ જશે
+            className="flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-xl transition-colors disabled:opacity-50"
           >
             {saved ? <Check className="w-4 h-4" /> : null}
-            {saved ? 'Saved!' : 'Save Settings'}
+            {saved ? 'Saved!' : isDeleting ? 'Saving...' : 'Save Settings'}
           </button>
         </div>
       </motion.div>

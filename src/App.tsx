@@ -7,10 +7,18 @@ import Dashboard from './components/dashboard/Dashboard';
 // Firebase માંથી જરૂરી ફંક્શન્સ અને કન્ફિગરેશન ઇમ્પોર્ટ કરો
 import { signInWithGoogle, auth, db } from './firebase'; 
 import { signOut, User, onAuthStateChanged } from 'firebase/auth';
-import { collection, onSnapshot, addDoc, doc, DocumentSnapshot, deleteDoc } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, doc, DocumentSnapshot, deleteDoc, updateDoc, getDoc } from 'firebase/firestore';
 
 export default function App() {
-  const [view, setView] = useState<ViewType>('landing');
+  const [view, setView] = useState<ViewType>(() => {
+  const savedView = localStorage.getItem('currentView');
+  return (savedView as ViewType) || 'landing';
+  });
+  useEffect(() => {
+  if (view && view !== 'landing') {
+    localStorage.setItem('currentView', view);
+  }
+}, [view]);
   const [passwords, setPasswords] = useState<PasswordEntry[]>([]);
   const [customCategories, setCustomCategories] = useState<string[]>([]);
   const [darkMode] = useState(false);
@@ -31,7 +39,12 @@ export default function App() {
     const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
       if (firebaseUser) {
         setUser(firebaseUser);
+        const savedView = localStorage.getItem('currentView');
+        if (savedView && savedView !== 'landing') {
+        setView(savedView as ViewType);
+          } else {
         setView('dashboard');
+          }
       } else {
         setUser(null);
         setUserProfile(null);
@@ -66,6 +79,7 @@ export default function App() {
   }, [user]);
 
   // 🚀 ૩. યુઝરનો પ્રોફાઈલ ડેટા (role) ફાયરબેઝમાંથી લાઈવ મેળવવા માટે
+  // 🚀 ૩. યુઝરનો પ્રોફાઈલ ડેટા (role) ફાયરબેઝમાંથી લાઈવ મેળવવા માટે
   useEffect(() => {
     if (!user) {
       setUserProfile(null);
@@ -75,7 +89,15 @@ export default function App() {
     const userDocRef = doc(db, 'users', user.uid);
     const unsubscribeUser = onSnapshot(userDocRef, (docSnap: DocumentSnapshot) => {
       if (docSnap.exists()) {
-        setUserProfile(docSnap.data()); 
+        // ✅ સાચો ફિક્સ: ડેટાને અહીં 'as any' તરીકે સીધો મેળવો
+        const data = docSnap.data() as any; 
+        
+        // પ્રોફાઇલ સ્ટેટ અપડેટ કરો
+        setUserProfile(data); 
+
+        // ઓટો-લોકના સેટિંગ્સ સ્ટેટ અપડેટ કરો
+        if (data.autoLock !== undefined) setAutoLock(data.autoLock);
+        if (data.timeoutMinutes !== undefined) setTimeoutMinutes(data.timeoutMinutes);
       }
     }, (error: Error) => {
       console.error("User profile snapshot error:", error);
@@ -83,6 +105,7 @@ export default function App() {
 
     return () => unsubscribeUser();
   }, [user]);
+  
 
   // ગૂગલ લોગીન ફંક્શન
   const handleGoogleLogin = useCallback(async () => {
@@ -104,6 +127,7 @@ export default function App() {
       await signOut(auth); 
       setUser(null);
       setUserProfile(null);
+      localStorage.removeItem('currentView');
       setView('landing');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
@@ -134,11 +158,51 @@ export default function App() {
     }
   }, [user]);
 
-  const updatePassword = useCallback((id: string, entry: Partial<PasswordEntry>) => {
-    setPasswords((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, ...entry, updatedAt: new Date().toISOString() } : p))
-    );
-  }, []);
+  /*const updatePassword = useCallback(async (id: string, entry: Partial<PasswordEntry>) => {
+  try {
+    if (!user) return;
+
+    // ફાયરબેઝમાં આ ચોક્કસ પાસવર્ડના ડોક્યુમેન્ટનો રેફરન્સ લો
+    const passwordDocRef = doc(db, 'users', user.uid, 'passwords', id);
+
+    // ફાયરબેઝમાં ડેટા અપડેટ કરો
+    await updateDoc(passwordDocRef, {
+      websiteName: entry.websiteName || '',
+      websiteUrl: entry.websiteUrl || '',
+      username: entry.username || '',
+      email: entry.email || '',
+      password: entry.password || '',
+      category: entry.category || 'Personal',
+      tags: entry.tags || [],
+      notes: entry.notes || '',
+      favorite: entry.favorite ?? false,
+      updatedAt: new Date().toISOString(),
+    });
+
+    console.log("Password updated successfully in Firebase!");
+  } catch (error) {
+    console.error("Error updating password in Firebase:", error);
+  }
+}, [user]);*/
+
+const updatePassword = useCallback(async (id: string, entry: Partial<PasswordEntry>) => {
+  try {
+    if (!user) return;
+
+    // ફાયરબેઝમાં આ ચોક્કસ પાસવર્ડના ડોક્યુમેન્ટનો રેફરન્સ લો
+    const passwordDocRef = doc(db, 'users', user.uid, 'passwords', id);
+
+    // 🚀 ફિક્સ: ફક્ત જે ડેટા બદલાયો છે (જેમ કે ફક્ત notes) તેને જ અપડેટ કરો, બાકીનું બધું સુરક્ષિત રહેશે
+    await updateDoc(passwordDocRef, {
+      ...entry,
+      updatedAt: new Date().toISOString(),
+    });
+
+    console.log("Password updated successfully in Firebase!");
+  } catch (error) {
+    console.error("Error updating password in Firebase:", error);
+  }
+}, [user]);
 
   
     const deletePassword = useCallback(async (id: string) => {

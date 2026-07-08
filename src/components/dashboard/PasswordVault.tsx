@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect} from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search,
@@ -43,7 +43,12 @@ export default function PasswordVault({
   const [search, setSearch] = useState('');
   const [filterCategory, setFilterCategory] = useState('All');
   const [sortBy, setSortBy] = useState<'name' | 'date' | 'category'>('date');
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>(() => {
+  const savedLayout = localStorage.getItem('vaultLayout');
+  return (savedLayout as 'list' | 'grid') || 'list';
+  });
+  useEffect(() => {
+  localStorage.setItem('vaultLayout', viewMode);}, [viewMode]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedPassword, setSelectedPassword] = useState<PasswordEntry | null>(null);
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
@@ -225,9 +230,15 @@ export default function PasswordVault({
                       <button onClick={() => deletePassword(pwd.id)} className="p-1.5 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-600">
                         <Trash2 className="w-4 h-4" />
                       </button>
-                      <button onClick={() => window.open(`https://${pwd.websiteUrl}`, '_blank')} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-blue-600">
-                        <ExternalLink className="w-4 h-4" />
-                      </button>
+                      <button onClick={() => {
+                            const url = pwd.websiteUrl.startsWith('http://') || pwd.websiteUrl.startsWith('https://')? pwd.websiteUrl: `https://${pwd.websiteUrl}`;
+                            window.open(url, '_blank');
+                             }} 
+                              className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-blue-600"
+                                    >
+                                <ExternalLink className="w-4 h-4" />
+                                </button>
+                      
                     </div>
                   </td>
                 </tr>
@@ -378,6 +389,26 @@ function AddEditModal({
     }
   );
   const [tagInput, setTagInput] = useState('');
+
+  // 🔄 જ્યારે પણ 'editing' પ્રોપ બદલાય ત્યારે ફોર્મ ડેટા અપડેટ કરવા માટે
+  useEffect(() => {
+    if (editing) {
+      setForm(editing);
+    } else {
+      setForm({
+        websiteName: '',
+        websiteUrl: '',
+        username: '',
+        email: '',
+        password: '',
+        category: 'Personal',
+        tags: [],
+        notes: '',
+        favorite: false,
+        customFields: [],
+      });
+    }
+  }, [editing]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -645,9 +676,11 @@ function PasswordDetailsModal({
             <button onClick={onEdit} className="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium text-blue-700 bg-blue-50 rounded-xl hover:bg-blue-100">
               <Pencil className="w-4 h-4" /> Edit
             </button>
-            <button onClick={() => window.open(`https://${password.websiteUrl}`, '_blank')} className="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50">
+           <button onClick={() => {const url = password.websiteUrl.startsWith('http://') || password.websiteUrl.startsWith('https://')? password.websiteUrl: `https://${password.websiteUrl}`;window.open(url, '_blank');}} 
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50"
+                >
               <ExternalLink className="w-4 h-4" /> Open
-            </button>
+              </button>
             <button onClick={onDelete} className="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium text-red-700 bg-red-50 rounded-xl hover:bg-red-100">
               <Trash2 className="w-4 h-4" /> Delete
             </button>

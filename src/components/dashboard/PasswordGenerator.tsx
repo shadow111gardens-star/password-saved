@@ -10,20 +10,27 @@ export default function PasswordGenerator() {
   const [symbols, setSymbols] = useState(true);
   const [password, setPassword] = useState('');
   const [copied, setCopied] = useState(false);
+  const [isRotating, setIsRotating] = useState(false); // 🔄 આઇકોન એનિમેશન માટે
 
   const generate = useCallback(() => {
+    // 🚀 ૧. જો કંઈ પણ સિલેક્ટ ન હોય, તો કમસેકમ lowercase ઓટો-ઓન કરી દો
+    if (!uppercase && !lowercase && !numbers && !symbols) {
+      setLowercase(true);
+      return;
+    }
+
     const chars = {
       uppercase: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
       lowercase: 'abcdefghijklmnopqrstuvwxyz',
       numbers: '0123456789',
       symbols: '!@#$%^&*()_+-=[]{}|;:,.<>?',
     };
+    
     let pool = '';
     if (uppercase) pool += chars.uppercase;
     if (lowercase) pool += chars.lowercase;
     if (numbers) pool += chars.numbers;
     if (symbols) pool += chars.symbols;
-    if (!pool) pool = chars.lowercase;
 
     let result = '';
     for (let i = 0; i < length; i++) {
@@ -36,7 +43,17 @@ export default function PasswordGenerator() {
     generate();
   }, [generate]);
 
+  // 🔄 બટન ક્લિક વખતે એનિમેશન ટ્રિગર કરવા
+  const handleGenerateClick = () => {
+    setIsRotating(true);
+    generate();
+    setTimeout(() => setIsRotating(false), 500);
+  };
+
+  // 🔒 ૨. સ્ટ્રેન્થ માપવાનું વધુ સિક્યોર લોજિક
   const getStrength = () => {
+    if (length < 8) return 1; // ૮ અક્ષરથી નાનો ગમે તેવો પાસવર્ડ Weak જ ગણાય
+    
     let score = 0;
     if (length >= 12) score += 1;
     if (length >= 16) score += 1;
@@ -150,10 +167,11 @@ export default function PasswordGenerator() {
 
         {/* Generate Button */}
         <button
-          onClick={generate}
+          onClick={handleGenerateClick} // 🚀 અપડેટ કરેલું ફંક્શન
           className="w-full flex items-center justify-center gap-2 py-3 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-xl transition-colors"
         >
-          <RefreshCw className="w-4 h-4" />
+          {/* 🔄 જો ક્લિક થાય તો આઇકોન ગોળ ફરશે */}
+          <RefreshCw className={`w-4 h-4 ${isRotating ? 'animate-spin' : ''}`} />
           Generate Again
         </button>
       </motion.div>

@@ -1,12 +1,12 @@
 import { motion } from 'framer-motion';
 
 const companies = [
-  'Acme Corp',
-  'Globex',
-  'Initech',
-  'Umbrella',
-  'Stark Ind',
-  'Wayne Ent',
+  'TechIn',
+  'GlobalSol',
+  'C-Hub',
+  'NextGen',
+  'Apex',
+  'Summit',
 ];
 
 export default function TrustedBy() {

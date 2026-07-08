@@ -3,8 +3,8 @@ import { Shield } from 'lucide-react';
 const footerLinks = {
   Product: [
     { label: 'Features', href: '#features' },
-    { label: 'Pricing', href: '#pricing' },
     { label: 'Security', href: '#security' },
+    { label: 'Pricing', href: '#pricing' },
     { label: 'FAQ', href: '#faq' },
   ],
   Legal: [
@@ -19,7 +19,8 @@ const socialLinks = [
     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
       <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
     </svg>
-  ), href: '#', label: 'Twitter' },
+  ), href: 'https://x.com/abhay8769', 
+     label: 'Twitter' },
 ];
 
 export default function Footer() {
@@ -43,6 +44,8 @@ export default function Footer() {
                 <a
                   key={social.label}
                   href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="w-9 h-9 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 hover:text-primary-600 hover:border-primary-200 transition-colors"
                   aria-label={social.label}
                 >

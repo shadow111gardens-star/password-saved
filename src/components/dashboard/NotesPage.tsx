@@ -13,24 +13,16 @@ export default function NotesPage({ passwords, updatePassword }: NotesPageProps)
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editNote, setEditNote] = useState('');
 
-  const passwordsWithNotes = passwords.filter(
+  // 🚀 ફિલ્ટર લોજિક: બધા જ પાસવર્ડ બતાવશે જેથી ડાયરેક્ટ નોટ એડિટ કરી શકાય
+  const filtered = passwords.filter(
     (p) =>
-      p.notes.trim() ||
-      p.websiteName.toLowerCase().includes(search.toLowerCase()) ||
-      p.notes.toLowerCase().includes(search.toLowerCase())
+      (p.websiteName || '').toLowerCase().includes(search.toLowerCase()) ||
+      (p.notes || '').toLowerCase().includes(search.toLowerCase())
   );
-
-  const filtered = search
-    ? passwordsWithNotes.filter(
-        (p) =>
-          p.websiteName.toLowerCase().includes(search.toLowerCase()) ||
-          p.notes.toLowerCase().includes(search.toLowerCase())
-      )
-    : passwordsWithNotes;
 
   const startEdit = (pwd: PasswordEntry) => {
     setEditingId(pwd.id);
-    setEditNote(pwd.notes);
+    setEditNote(pwd.notes || '');
   };
 
   const saveEdit = (id: string) => {
@@ -75,11 +67,13 @@ export default function NotesPage({ passwords, updatePassword }: NotesPageProps)
             >
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-9 h-9 rounded-lg bg-primary-100 flex items-center justify-center flex-shrink-0">
-                  <span className="text-sm font-bold text-primary-700">{pwd.websiteName[0]}</span>
+                  <span className="text-sm font-bold text-primary-700">
+                    {pwd.websiteName ? pwd.websiteName[0].toUpperCase() : 'W'}
+                  </span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-900 truncate">{pwd.websiteName}</p>
-                  <p className="text-xs text-slate-400">{pwd.websiteUrl}</p>
+                  <p className="text-sm font-semibold text-slate-900 truncate">{pwd.websiteName || 'Untitled'}</p>
+                  <p className="text-xs text-slate-400 truncate">{pwd.websiteUrl}</p>
                 </div>
                 {editingId === pwd.id ? (
                   <button
@@ -109,7 +103,7 @@ export default function NotesPage({ passwords, updatePassword }: NotesPageProps)
               ) : (
                 <div className="bg-slate-50 rounded-xl p-3 min-h-[80px]">
                   <p className="text-sm text-slate-700 whitespace-pre-wrap">
-                    {pwd.notes.trim() || <span className="text-slate-400 italic">No notes added yet.</span>}
+                    {pwd.notes && pwd.notes.trim() ? pwd.notes : <span className="text-slate-400 italic">No notes added yet.</span>}
                   </p>
                 </div>
               )}
@@ -117,7 +111,7 @@ export default function NotesPage({ passwords, updatePassword }: NotesPageProps)
               <div className="flex items-center gap-2 mt-3">
                 <span className="px-2 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-600">{pwd.category}</span>
                 <span className="text-xs text-slate-400">
-                  Updated {new Date(pwd.updatedAt).toLocaleDateString()}
+                  Updated {pwd.updatedAt ? new Date(pwd.updatedAt).toLocaleDateString() : 'N/A'}
                 </span>
               </div>
             </motion.div>
@@ -128,7 +122,7 @@ export default function NotesPage({ passwords, updatePassword }: NotesPageProps)
       {filtered.length === 0 && (
         <div className="text-center py-16 bg-white rounded-2xl border border-slate-200">
           <StickyNote className="w-12 h-12 text-slate-200 mx-auto mb-4" />
-          <p className="text-sm text-slate-400">No notes found.</p>
+          <p className="text-sm text-slate-400">No passwords or notes found.</p>
         </div>
       )}
     </div>
