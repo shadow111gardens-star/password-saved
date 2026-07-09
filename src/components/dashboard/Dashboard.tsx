@@ -21,7 +21,7 @@ interface DashboardProps {
   currentUser: any;
   passwords: PasswordEntry[];
   addPassword: (entry: Partial<PasswordEntry>) => void; 
-  updatePassword: (id: string, entry: Partial<PasswordEntry>) => Promise<void> | void;
+  updatePassword: (id: string, entry: Partial<PasswordEntry>) => void;
   deletePassword: (id: string) => void;
   toggleFavorite: (id: string) => void;
   allCategories: string[];
@@ -79,11 +79,10 @@ export default function Dashboard({
   isLockedRef.current = isLocked;
 
   const resetActivity = useCallback(() => {
-    // 🚀 ફિક્સ: જો એપ ઓલરેડી લોક (Locked) થઈ ગઈ હોય, 
-    // તો માઉસ ક્લિક કે હલનચલનથી ટાઈમર રીસેટ કે અનલોક ન થવું જોઈએ!
-    if (isLockedRef.current) return;
-
     lastActivityRef.current = Date.now();
+    if (isLockedRef.current) {
+      setIsLocked(false);
+    }
   }, []);
 
   useEffect(() => {

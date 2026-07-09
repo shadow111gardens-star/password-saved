@@ -1,4 +1,5 @@
 import { Shield } from 'lucide-react';
+import { Link } from "react-router-dom"; // ૧. Link ઇમ્પોર્ટ થઈ ગયું
 
 const footerLinks = {
   Product: [
@@ -8,9 +9,9 @@ const footerLinks = {
     { label: 'FAQ', href: '#faq' },
   ],
   Legal: [
-    { label: 'Privacy', href: '#' },
-    { label: 'Terms', href: '#' },
-    { label: 'Support', href: '#' },
+    { label: 'Privacy', href: '/privacy' }, // ૨. અહીં પાથ સેટ થઈ ગયો
+    { label: 'Terms', href: '/terms' },
+    { label: 'Support', href: '/support' },
   ],
 };
 
@@ -62,12 +63,22 @@ export default function Footer() {
               <ul className="space-y-2.5">
                 {links.map((link) => (
                   <li key={link.label}>
-                    <a
-                      href={link.href}
-                      className="text-sm text-slate-500 hover:text-primary-600 transition-colors"
-                    >
-                      {link.label}
-                    </a>
+                    {/* ૩. અહીં કન્ડિશનલ રાઉટિંગ સેટ થઈ ગયું */}
+                    {link.href.startsWith('/') ? (
+                      <Link
+                        to={link.href}
+                        className="text-sm text-slate-500 hover:text-primary-600 transition-colors"
+                      >
+                        {link.label}
+                      </Link>
+                    ) : (
+                      <a
+                        href={link.href}
+                        className="text-sm text-slate-500 hover:text-primary-600 transition-colors"
+                      >
+                        {link.label}
+                      </a>
+                    )}
                   </li>
                 ))}
               </ul>
