@@ -172,7 +172,7 @@ export default function Dashboard({
           </a>*/}
 
           <a 
-            href="https://sandbox.polar.sh/checkout/polar_c_fcpMpaYfbUVgU5WUI7mERDIDjCIutZciyDR7z2ipVPd" 
+            href={`https://sandbox-api.polar.sh/v1/checkout-links/polar_cl_wGBEtq9aBZ3wt5qTo9fuYaobKtqJYlIb71uX846NQHs/redirect?customer_email=${encodeURIComponent(currentUser?.email || '')}&metadata[firebase_uid]=${currentUser?.uid}`} 
             target="_blank" 
             rel="noopener noreferrer"
           >
