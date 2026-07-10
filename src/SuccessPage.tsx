@@ -1,12 +1,14 @@
-import { useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from './firebase'; 
+import { useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+import { db } from "./firebase";
 
 const SuccessPage = () => {
   const [searchParams] = useSearchParams();
-  const checkoutId = searchParams.get('checkout_id');
   const navigate = useNavigate();
+
+  const checkoutId = searchParams.get("checkout_id");
 
   useEffect(() => {
     if (checkoutId) {
@@ -16,32 +18,83 @@ const SuccessPage = () => {
 
   const verifyAndUpgrade = async (id: string) => {
     try {
-      const response = await fetch(`https://api.polar.sh/v1/checkouts/${id}`, {
-        headers: { 
-          // અહીં તમારા ડેવલપર ટોકનનો ઉપયોગ થશે
-            'Authorization': `Bearer ${import.meta.env.VITE_POLAR_API_TOKEN}` 
+      console.log("🚀 Starting payment verification...");
+      console.log("Checkout ID:", id);
+
+      const response = await fetch(
+        `https://api.polar.sh/v1/checkouts/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${import.meta.env.VITE_POLAR_API_TOKEN}`,
+          },
         }
-      });
-      
+      );
+
+      console.log("API Status:", response.status);
+
       const data = await response.json();
 
-      if (data.status === 'succeeded') {
-        const uid = data.metadata.firebase_uid; 
-        if (uid) {
-          await updateDoc(doc(db, "users", uid), { role: "pro" });
-          alert("Success! તમે હવે Pro મેમ્બર છો.");
-          navigate('/dashboard'); 
-        }
+      console.log("========== POLAR RESPONSE ==========");
+      console.log(data);
+      console.log("Checkout Status:", data.status);
+      console.log("Metadata:", data.metadata);
+
+      if (data.status !== "succeeded") {
+        console.log("❌ Payment is not succeeded.");
+        return;
       }
-    } catch (err) {
-      console.error("વેરિફિકેશન એરર:", err);
+
+      const auth = getAuth();
+
+      onAuthStateChanged(auth, async (user) => {
+        console.log("========== FIREBASE USER ==========");
+        console.log(user);
+
+        if (!user) {
+          console.error("❌ No logged in user found.");
+          return;
+        }
+
+        console.log("Firebase UID:", user.uid);
+
+        try {
+          await setDoc(
+            doc(db, "users", user.uid),
+            {
+              role: "pro",
+              upgradedAt: new Date().toISOString(),
+            },
+            { merge: true }
+          );
+
+          console.log("✅ Firestore Updated Successfully");
+
+          alert("🎉 Payment Successful! You are now a Pro user.");
+
+          navigate("/dashboard", { replace: true });
+        } catch (firestoreError) {
+          console.error("❌ Firestore Error:", firestoreError);
+        }
+      });
+    } catch (error) {
+      console.error("❌ Verification Error:", error);
+      alert("Payment verification failed.");
     }
   };
 
   return (
-    <div style={{ textAlign: 'center', marginTop: '50px' }}>
-      <h2>પેમેન્ટ વેરિફાય થઈ રહ્યું છે...</h2>
-      <p>કૃપા કરીને થોડી રાહ જુઓ.</p>
+    <div
+      style={{
+        display: "grid",
+        placeItems: "center",
+        minHeight: "100vh",
+        textAlign: "center",
+      }}
+    >
+      <div>
+        <h2>Payment Verification...</h2>
+        <p>Please wait while we verify your payment.</p>
+      </div>
     </div>
   );
 };
