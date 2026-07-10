@@ -18,27 +18,38 @@ export default async function handler(req, res) {
     const body = req.body;
     const eventType = body.type;
 
-    if (eventType === 'subscription.created' || eventType === 'subscription.updated') {
-      const subscription = body.data;
+    console.log("Received Polar Event:", eventType);
 
-      if (subscription.status === 'active') {
-        const firebaseUserId = subscription.metadata?.firebase_user_id;
+    // ચેક કરો કે ઇવેન્ટ સબ્સ્ક્રિપ્શનની છે કે ઓર્ડરની
+    if (
+      eventType === 'subscription.created' || 
+      eventType === 'subscription.updated' || 
+      eventType === 'order.created'
+    ) {
+      const dataObject = body.data;
+      
+      // સાચી કી (firebase_uid) દ્વારા આઈડી મેળવો
+      const firebaseUserId = dataObject.metadata?.firebase_uid;
 
-        if (firebaseUserId) {
-          // Firebase Firestore માં યુઝરનો રોલ અપડેટ કરો
-          await db.collection('users').doc(firebaseUserId).update({
-            role: 'pro',
-            updatedAt: new Date().toISOString()
-          });
-          
-          console.log(`User ${firebaseUserId} successfully upgraded to Pro!`);
-        }
+      console.log("Extracted Firebase UID:", firebaseUserId);
+
+      if (firebaseUserId) {
+        // ફાયરબેઝમાં યુઝરનો રોલ 'pro' અપડેટ કરો
+        await db.collection('users').doc(firebaseUserId).update({
+          role: 'pro',
+          updatedAt: new Date().toISOString()
+        });
+        
+        console.log(`User ${firebaseUserId} successfully upgraded to Pro!`);
+        return res.status(200).json({ success: true, message: `Upgraded user ${firebaseUserId}` });
+      } else {
+        console.log("No firebase_uid found in metadata:", dataObject.metadata);
       }
     }
 
     return res.status(200).json({ received: true });
   } catch (error) {
     console.error('Webhook Error:', error);
-    return res.status(500).json({ error: 'Webhook handler failed' });
+    return res.status(500).json({ error: 'Webhook handler failed', details: error.message });
   }
 }
