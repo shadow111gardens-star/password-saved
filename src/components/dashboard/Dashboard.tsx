@@ -138,9 +138,18 @@ export default function Dashboard({
         <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm mb-6">
           {descriptionText}
         </p>
-        <button className="px-6 py-3 font-semibold text-white bg-gradient-to-r from-amber-500 to-orange-600 rounded-xl shadow-lg hover:opacity-90 transition-opacity">
-          Upgrade to Pro ⭐
-        </button>
+        {/*polar payment code link*/}
+
+          <a 
+            href="https://buy.polar.sh/polar_cl_rDDltiKpUAjRpx4G51Gk4EepdXwOic1DDka4B2S46QJ" 
+            target="_blank" 
+            rel="noopener noreferrer"
+          >
+            <button className="px-6 py-3 font-semibold text-white bg-gradient-to-r from-amber-500 to-orange-600 rounded-xl shadow-lg hover:opacity-90 transition-opacity">
+              Upgrade to Pro ⭐
+            </button>
+          </a>
+          
       </div>
     );
   };
