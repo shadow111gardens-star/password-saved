@@ -21,8 +21,11 @@ const SuccessPage = () => {
       console.log("🚀 Starting payment verification...");
       console.log("Checkout ID:", id);
 
-      const response = await fetch(
-        `https://api.polar.sh/v1/checkouts/${id}`,
+      //const response = await fetch(
+        //`https://api.polar.sh/v1/checkouts/${id}`,
+
+        const response = await fetch(
+        `https://sandbox-api.polar.sh/v1/checkouts/${id}`,
         {
           headers: {
             Authorization: `Bearer ${import.meta.env.VITE_POLAR_API_TOKEN}`,
