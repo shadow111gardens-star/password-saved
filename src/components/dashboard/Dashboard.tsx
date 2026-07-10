@@ -13,7 +13,9 @@ import ImportExport from './ImportExport';
 import NotesPage from './NotesPage';
 import ProfilePage from './ProfilePage';
 import SettingsPage from './SettingsPage';
-import { Lock, Unlock, ShieldAlert } from 'lucide-react'; // ShieldAlert અહિં ઉમેર્યું છે 🍿
+import { Lock, Unlock, ShieldAlert } from 'lucide-react'; 
+import { doc, onSnapshot } from 'firebase/firestore';
+import { db } from '../../firebase'; // તમારા પ્રોજેક્ટ મુજબ firebase.ts નો સાચો પાથ
 
 interface DashboardProps {
   view: ViewType;
@@ -57,12 +59,31 @@ export default function Dashboard({
   onLogout,
 }: DashboardProps) {
   const [isLocked, setIsLocked] = useState(false);
+
+  // 👇 આ નવું સ્ટેટ ઉમેરો જે ડેટાબેઝમાંથી લાઈવ રોલ રીડ કરશે
+  const [liveRole, setLiveRole] = useState('free'); 
+
+  useEffect(() => {
+    if (!currentUser?.uid) return;
+
+    // ફાયરબેઝ ડેટાબેઝમાંથી રીઅલ-ટાઇમ ચેન્જીસ ટ્રેક કરશે
+    const unsubscribe = onSnapshot(doc(db, 'users', currentUser.uid), (docSnap) => {
+      if (docSnap.exists()) {
+        const userData = docSnap.data();
+        setLiveRole(userData.role || 'free');
+      }
+    });
+
+    return () => unsubscribe();
+  }, [currentUser]);
+
+  //const lastActivityRef = useRef(Date.now());
   const lastActivityRef = useRef(Date.now());
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isLockedRef = useRef(false);
 
   // 🚀 1. યુઝરનો રોલ (free કે pro) ગેટ કરો (જો ના મળે તો બાય ડિફોલ્ટ 'free')
-  const userRole = currentUser?.role || 'free';
+  const userRole = liveRole;
   const isPro = userRole === 'pro';
   const passwordCount = passwords.length;
 
