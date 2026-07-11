@@ -1,6 +1,5 @@
 // src/components/Dashboard.tsx
 import { useEffect, useRef, useState, useCallback } from 'react';
-import type { User } from 'firebase/auth';
 import type { ViewType, PasswordEntry } from '../../types';
 import Sidebar from './Sidebar';
 import DashboardHome from './DashboardHome';
@@ -13,9 +12,9 @@ import ImportExport from './ImportExport';
 import NotesPage from './NotesPage';
 import ProfilePage from './ProfilePage';
 import SettingsPage from './SettingsPage';
-import { Lock, Unlock, ShieldAlert } from 'lucide-react'; 
+import { Lock, Unlock, ShieldAlert, Menu, X, Shield } from 'lucide-react'; // 🚀 Menu, X, Shield ઉમેર્યા
 import { doc, onSnapshot } from 'firebase/firestore';
-import { db } from '../../firebase'; // તમારા પ્રોજેક્ટ મુજબ firebase.ts નો સાચો પાથ
+import { db } from '../../firebase';
 
 interface DashboardProps {
   view: ViewType;
@@ -59,14 +58,14 @@ export default function Dashboard({
   onLogout,
 }: DashboardProps) {
   const [isLocked, setIsLocked] = useState(false);
-
-  // 👇 આ નવું સ્ટેટ ઉમેરો જે ડેટાબેઝમાંથી લાઈવ રોલ રીડ કરશે
   const [liveRole, setLiveRole] = useState('free'); 
+  
+  // 🚀 મોબાઈલ મેનુ ઓપન/ક્લોઝ કરવા માટેનું સ્ટેટ
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!currentUser?.uid) return;
 
-    // ફાયરબેઝ ડેટાબેઝમાંથી રીઅલ-ટાઇમ ચેન્જીસ ટ્રેક કરશે
     const unsubscribe = onSnapshot(doc(db, 'users', currentUser.uid), (docSnap) => {
       if (docSnap.exists()) {
         const userData = docSnap.data();
@@ -77,26 +76,22 @@ export default function Dashboard({
     return () => unsubscribe();
   }, [currentUser]);
 
-  //const lastActivityRef = useRef(Date.now());
   const lastActivityRef = useRef(Date.now());
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isLockedRef = useRef(false);
 
-  // 🚀 1. યુઝરનો રોલ (free કે pro) ગેટ કરો (જો ના મળે તો બાય ડિફોલ્ટ 'free')
   const userRole = liveRole;
   const isPro = userRole === 'pro';
   const passwordCount = passwords.length;
 
-  // 🚀 2. કસ્ટમ એડ પાસવર્ડ ફંક્શન (લિમિટ ચેક કરવા માટે)
   const handleAddPasswordWithLimit = (entry: Partial<PasswordEntry>) => {
     if (!isPro && passwordCount >= 5) {
       alert("⚠️ You have reached the free tier limit of 5 passwords. Please upgrade to PRO to add unlimited vault entries!");
       return;
     }
-    addPassword(entry); // જો પ્રો હોય અથવા કાઉન્ટ < 5 હોય તો જ સેવ થશે
+    addPassword(entry);
   };
 
-  // Keep ref in sync with state
   isLockedRef.current = isLocked;
 
   const resetActivity = useCallback(() => {
@@ -140,47 +135,38 @@ export default function Dashboard({
     setIsLocked(false);
   };
 
-  // 🚀 3. પ્રીમિયમ ફીચર્સ માટે લોક સ્ક્રીન કમ્પોનન્ટ
+  // 🚀 સેફ વ્યુ ચેન્જર જે મોબાઈલ મેનુને પણ આપોઆપ બંધ કરશે
+  const handleViewChange = (v: ViewType) => {
+    setView(v);
+    setIsMobileMenuOpen(false);
+  };
+
   const renderPremiumLock = (featureName: string) => {
-    // ફીચરના નામ પ્રમાણે અલગ ડિસ્ક્રિપ્શન સેટ કરવા માટે:
     const descriptionText = featureName === "Password Generator"
       ? "Upgrade your account to unlock our premium, ultra-secure password generator and create highly advanced keys."
       : "Upgrade to PRO to safely backup, export, or migrate your entire vault data anytime you want.";
 
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-4 sm:p-6">
         <div className="w-16 h-16 rounded-2xl bg-amber-50 dark:bg-amber-950/30 flex items-center justify-center mb-4 animate-bounce">
           <ShieldAlert className="w-8 h-8 text-amber-500" />
         </div>
-        <h2 className="text-2xl font-bold !text-black dark:!text-black mb-2">
+        <h2 className="text-xl sm:text-2xl font-bold !text-black dark:!text-black mb-2">
           {featureName} is for PRO Users Only!
         </h2>
-        {/* 👇 અહીં સબ-ટેક્સ્ટ ડાયનેમિકલી ચેન્જ થશે અને કલર પણ વ્યવસ્થિત દેખાશે */}
-        <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm mb-6">
+        <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm mb-6 px-2">
           {descriptionText}
         </p>
-        {/*polar payment code link*/}
-
-         {/* <a 
-            href="https://buy.polar.sh/polar_cl_rDDltiKpUAjRpx4G51Gk4EepdXwOic1DDka4B2S46QJ" 
-            target="_blank" 
-            rel="noopener noreferrer"
-          >
-            <button className="px-6 py-3 font-semibold text-white bg-gradient-to-r from-amber-500 to-orange-600 rounded-xl shadow-lg hover:opacity-90 transition-opacity">
-              Upgrade to Pro ⭐
-            </button>
-          </a>*/}
-
-          <a 
-            href={`https://sandbox-api.polar.sh/v1/checkout-links/polar_cl_wGBEtq9aBZ3wt5qTo9fuYaobKtqJYlIb71uX846NQHs/redirect?customer_email=${encodeURIComponent(currentUser?.email || '')}&metadata[firebase_uid]=${currentUser?.uid}`} 
-            target="_blank" 
-            rel="noopener noreferrer"
-          >
-            <button className="px-6 py-3 font-semibold text-white bg-gradient-to-r from-amber-500 to-orange-600 rounded-xl shadow-lg hover:opacity-90 transition-opacity">
-              Upgrade to Pro ⭐
-            </button>
-          </a>
-                    
+        <a 
+          href={`https://sandbox-api.polar.sh/v1/checkout-links/polar_cl_wGBEtq9aBZ3wt5qTo9fuYaobKtqJYlIb71uX846NQHs/redirect?customer_email=${encodeURIComponent(currentUser?.email || '')}&metadata[firebase_uid]=${currentUser?.uid}`} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="w-full sm:w-auto"
+        >
+          <button className="w-full sm:w-auto px-6 py-3 font-semibold text-white bg-gradient-to-r from-amber-500 to-orange-600 rounded-xl shadow-lg hover:opacity-90 transition-opacity">
+            Upgrade to Pro ⭐
+          </button>
+        </a>
       </div>
     );
   };
@@ -188,13 +174,12 @@ export default function Dashboard({
   const renderContent = () => {
     switch (view) {
       case 'dashboard':
-        // 🛠️ 'userRole' પ્રોપ હટાવી દીધો જેથી TS Error સોલ્વ થઈ જાય
-        return <DashboardHome passwords={passwords} setView={setView} />;
+        return <DashboardHome passwords={passwords} setView={handleViewChange} />;
       case 'vault':
         return (
           <PasswordVault
             passwords={passwords}
-            addPassword={handleAddPasswordWithLimit} // આ લિમિટ વાળું ફંક્શન ચાલુ રહેશે 🚀
+            addPassword={handleAddPasswordWithLimit}
             updatePassword={updatePassword}
             deletePassword={deletePassword}
             toggleFavorite={toggleFavorite}
@@ -202,7 +187,6 @@ export default function Dashboard({
             addCustomCategory={addCustomCategory}
             isPro={isPro}
             passwordCount={passwords.length}
-
           />
         );
       case 'favorites':
@@ -218,7 +202,7 @@ export default function Dashboard({
         return (
           <CategoriesPage
             passwords={passwords}
-            setView={setView}
+            setView={handleViewChange}
             allCategories={allCategories}
             customCategories={customCategories}
             addCustomCategory={addCustomCategory}
@@ -246,29 +230,62 @@ export default function Dashboard({
           />
         );
       default:
-        return <DashboardHome passwords={passwords} setView={setView} />;
+        return <DashboardHome passwords={passwords} setView={handleViewChange} />;
     }
   };
 
   return (
-    <div className={`min-h-screen flex ${darkMode ? 'bg-slate-900' : 'bg-slate-50'}`}>
-      <Sidebar
-        currentView={view}
-        setView={setView}
-        darkMode={darkMode}
-        onLogout={onLogout}
-        // 🛠️ 'userRole' હટાવી દીધો જેથી સાઇડબારની TS Error સોલ્વ થઈ જાય
-      />
-      <main className="flex-1 overflow-auto relative">
+    <div className={`min-h-screen flex flex-col md:flex-row ${darkMode ? 'bg-slate-900' : 'bg-slate-50'}`}>
+      
+      {/* 1. 📱 મોબાઈલ માટે ટોપ બાર હેડર (ફક્ત મોબાઈલમાં જ દેખાશે) */}
+      <div className="md:hidden flex items-center justify-between bg-white dark:bg-slate-900 px-4 py-4 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-md bg-primary-600 flex items-center justify-center">
+            <Shield className="w-4 h-4 text-white" />
+          </div>
+          <span className="font-semibold text-slate-900 dark:text-white text-base">VaultPass</span>
+        </div>
+        <button 
+          onClick={() => setIsMobileMenuOpen(true)}
+          className="p-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
+      </div>
+
+      {/* 2. 📱 મોબાઈલ સાઇડબાર ડ્રોવર (મેનુ ઓપન થાય ત્યારે જ દેખાશે) */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          {/* બેકગ્રાઉન્ડ ઓવરલે બ્લર */}
+          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)} />
+          
+          <div className="fixed inset-y-0 left-0 w-64 bg-white dark:bg-slate-900 shadow-xl flex flex-col max-w-[80vw]">
+            <button 
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-600 rounded-lg"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="h-full pt-4">
+              <Sidebar currentView={view} setView={handleViewChange} darkMode={darkMode} onLogout={onLogout} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3. 💻 ડેસ્કટોપ સાઇડબાર (મોટા સ્ક્રીન પર નોર્મલ દેખાશે) */}
+      <aside className="hidden md:block w-64 shrink-0 sticky top-0 h-screen border-r border-slate-200 dark:border-slate-800">
+        <Sidebar currentView={view} setView={setView} darkMode={darkMode} onLogout={onLogout} />
+      </aside>
+
+      {/* 4. 📦 મેઈન કન્ટેન્ટ એરિયા (વર્કિંગ સ્પેસ) */}
+      <main className="flex-1 overflow-x-hidden p-4 sm:p-6 lg:p-8 relative">
         {renderContent()}
         
-        {/* Auto Lock Overlay સેમ રહેશે... */}
-
         {/* Auto Lock Overlay */}
         {isLocked && (
-          // ... (બાકીનો લોક ઓવરલે કોડ સેમ રહેશે)
-          <div className="absolute inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center">
-            <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full mx-4 text-center">
+          <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 max-w-sm w-full text-center">
               <div className="w-16 h-16 rounded-2xl bg-primary-50 flex items-center justify-center mx-auto mb-4">
                 <Lock className="w-8 h-8 text-primary-600" />
               </div>
