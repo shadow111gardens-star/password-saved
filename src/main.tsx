@@ -25,7 +25,7 @@ createRoot(document.getElementById("root")!).render(
     <BrowserRouter>
       <Routes>
         {/* ૩. તમારા બધા પેજીસ અહીં ડિફાઇન કરો */}
-        <Route path="/" element={<App />} />
+        <Route path="/*" element={<App />} />
         <Route path="/success" element={<SuccessPage />} />
       </Routes>
     </BrowserRouter>
