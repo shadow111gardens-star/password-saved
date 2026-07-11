@@ -13,7 +13,6 @@ export default function NotesPage({ passwords, updatePassword }: NotesPageProps)
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editNote, setEditNote] = useState('');
 
-  // 🚀 ફિલ્ટર લોજિક: બધા જ પાસવર્ડ બતાવશે જેથી ડાયરેક્ટ નોટ એડિટ કરી શકાય
   const filtered = passwords.filter(
     (p) =>
       (p.websiteName || '').toLowerCase().includes(search.toLowerCase()) ||
@@ -32,18 +31,20 @@ export default function NotesPage({ passwords, updatePassword }: NotesPageProps)
   };
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-8 w-full">
+      {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center">
+        <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center flex-shrink-0">
           <StickyNote className="w-5 h-5 text-orange-600" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Notes</h1>
-          <p className="text-sm text-slate-500 mt-1">Secure notes attached to your passwords.</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Notes</h1>
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">Secure notes attached to your passwords.</p>
         </div>
       </div>
 
-      <div className="relative mb-6 max-w-md">
+      {/* Search Bar */}
+      <div className="relative mb-6 w-full max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         <input
           type="text"
@@ -54,7 +55,8 @@ export default function NotesPage({ passwords, updatePassword }: NotesPageProps)
         />
       </div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Grid Layout */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <AnimatePresence>
           {filtered.map((pwd, i) => (
             <motion.div
@@ -63,7 +65,7 @@ export default function NotesPage({ passwords, updatePassword }: NotesPageProps)
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ delay: i * 0.03 }}
-              className="p-5 rounded-2xl bg-white border border-slate-200 hover:border-primary-200 hover:shadow-md transition-all"
+              className="p-5 rounded-2xl bg-white border border-slate-200 hover:border-primary-200 hover:shadow-md transition-all flex flex-col"
             >
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-9 h-9 rounded-lg bg-primary-100 flex items-center justify-center flex-shrink-0">
@@ -73,7 +75,7 @@ export default function NotesPage({ passwords, updatePassword }: NotesPageProps)
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-slate-900 truncate">{pwd.websiteName || 'Untitled'}</p>
-                  <p className="text-xs text-slate-400 truncate">{pwd.websiteUrl}</p>
+                  <p className="text-[10px] sm:text-xs text-slate-400 truncate">{pwd.websiteUrl}</p>
                 </div>
                 {editingId === pwd.id ? (
                   <button
@@ -101,16 +103,18 @@ export default function NotesPage({ passwords, updatePassword }: NotesPageProps)
                   autoFocus
                 />
               ) : (
-                <div className="bg-slate-50 rounded-xl p-3 min-h-[80px]">
-                  <p className="text-sm text-slate-700 whitespace-pre-wrap">
+                <div className="bg-slate-50 rounded-xl p-3 min-h-[80px] mb-3">
+                  <p className="text-sm text-slate-700 whitespace-pre-wrap break-words">
                     {pwd.notes && pwd.notes.trim() ? pwd.notes : <span className="text-slate-400 italic">No notes added yet.</span>}
                   </p>
                 </div>
               )}
 
-              <div className="flex items-center gap-2 mt-3">
-                <span className="px-2 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-600">{pwd.category}</span>
-                <span className="text-xs text-slate-400">
+              <div className="flex items-center gap-2 mt-auto">
+                <span className="px-2 py-1 rounded-lg text-[10px] sm:text-xs font-medium bg-slate-100 text-slate-600 truncate">
+                  {pwd.category}
+                </span>
+                <span className="text-[10px] sm:text-xs text-slate-400 truncate">
                   Updated {pwd.updatedAt ? new Date(pwd.updatedAt).toLocaleDateString() : 'N/A'}
                 </span>
               </div>

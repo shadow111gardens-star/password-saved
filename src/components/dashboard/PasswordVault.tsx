@@ -95,7 +95,7 @@ export default function PasswordVault({
  return (
     <div className="p-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Password Vault</h1>
           <p className="text-sm text-slate-500 mt-1">Manage all your stored credentials.</p>
@@ -117,7 +117,7 @@ export default function PasswordVault({
       </div>
 
       {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-6">
+      <div className="flex flex-col md:flex-row gap-3 mb-6">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
@@ -165,7 +165,7 @@ export default function PasswordVault({
 
       {/* Password List / Grid View */}
       {viewMode === 'list' ? (
-        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div className="bg-white rounded-2xl border border-slate-200 overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/50">
@@ -252,7 +252,7 @@ export default function PasswordVault({
           )}
         </div>
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((pwd) => (
             <motion.div
               key={pwd.id}

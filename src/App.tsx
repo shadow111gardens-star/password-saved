@@ -173,7 +173,9 @@ import LandingPage from './components/LandingPage';
 import Dashboard from './components/dashboard/Dashboard';
 import Privacy from './components/Privacy'; 
 import Terms from './components/Terms'; 
-import Support from './components/Support'; 
+import Support from './components/Support';
+import { Menu } from 'lucide-react'; 
+import Sidebar from './components/dashboard/Sidebar'; // આ લાઇન ઉમેરો
 
 import { signInWithGoogle, auth, db } from './firebase'; 
 import { signOut, User, onAuthStateChanged } from 'firebase/auth';
@@ -182,6 +184,7 @@ import { collection, onSnapshot, addDoc, doc, DocumentSnapshot, deleteDoc, updat
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const [view, setView] = useState<ViewType | 'landing'>(() => {
     const savedView = localStorage.getItem('currentView');
@@ -351,26 +354,63 @@ export default function App() {
         view === 'landing' ? (
           <LandingPage onGetStarted={handleGoogleLogin} />
         ) : (
-          <Dashboard
-            view={view as ViewType} 
-            setView={setView}
-            passwords={passwords}
-            addPassword={addPassword}
-            updatePassword={updatePassword}
-            deletePassword={deletePassword}
-            toggleFavorite={toggleFavorite}
-            allCategories={allCategories}
-            customCategories={customCategories}
-            addCustomCategory={addCustomCategory}
-            removeCustomCategory={removeCustomCategory}
-            darkMode={darkMode}
-            autoLock={autoLock}
-            setAutoLock={setAutoLock}
-            timeoutMinutes={timeoutMinutes}
-            setTimeoutMinutes={setTimeoutMinutes}
-            onLogout={handleLogout}
-            currentUser={userProfile}
-          />
+          <div className="flex h-screen overflow-hidden bg-slate-50">
+            {/* મોબાઈલ ઓવરલે: સાઇડબાર બહાર ક્લિક કરવાથી બંધ થશે */}
+            {isSidebarOpen && (
+              <div 
+                className="fixed inset-0 z-40 bg-black/50 lg:hidden" 
+                onClick={() => setIsSidebarOpen(false)} 
+              />
+            )}
+
+            
+            {/* સાઇડબાર કન્ટેનર: h-screen અને h-full ઉમેર્યા */}
+            <div className={`fixed inset-y-0 left-0 z-50 w-64 h-screen bg-white transform transition-transform duration-300 lg:relative lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+              
+              <Sidebar 
+                currentView={view as ViewType} 
+                setView={(v: ViewType) => { setView(v); setIsSidebarOpen(false); }} 
+                darkMode={darkMode} 
+                onLogout={handleLogout}
+                isMobile={true}
+                closeMobileMenu={() => setIsSidebarOpen(false)}
+              />
+            </div>
+
+            {/* મુખ્ય કન્ટેન્ટ */}
+            <main className="flex-1 flex flex-col overflow-hidden">
+              {/* મોબાઈલ હેડર: મેનૂ બટન */}
+              <div className="lg:hidden p-4 bg-white border-b border-slate-200">
+                <button onClick={() => setIsSidebarOpen(true)} className="p-2 text-slate-600">
+                  <Menu className="w-6 h-6" />
+                </button>
+              </div>
+
+              {/* ડેશબોર્ડ કન્ટેન્ટ */}
+              <div className="flex-1 overflow-y-auto">
+                <Dashboard
+                  view={view as ViewType} 
+                  setView={setView}
+                  passwords={passwords}
+                  addPassword={addPassword}
+                  updatePassword={updatePassword}
+                  deletePassword={deletePassword}
+                  toggleFavorite={toggleFavorite}
+                  allCategories={allCategories}
+                  customCategories={customCategories}
+                  addCustomCategory={addCustomCategory}
+                  removeCustomCategory={removeCustomCategory}
+                  darkMode={darkMode}
+                  autoLock={autoLock}
+                  setAutoLock={setAutoLock}
+                  timeoutMinutes={timeoutMinutes}
+                  setTimeoutMinutes={setTimeoutMinutes}
+                  onLogout={handleLogout}
+                  currentUser={userProfile}
+                />
+              </div>
+            </main>
+          </div>
         )
       } />
     </Routes>

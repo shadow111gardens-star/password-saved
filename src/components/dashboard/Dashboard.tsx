@@ -252,13 +252,7 @@ export default function Dashboard({
 
   return (
     <div className={`min-h-screen flex ${darkMode ? 'bg-slate-900' : 'bg-slate-50'}`}>
-      <Sidebar
-        currentView={view}
-        setView={setView}
-        darkMode={darkMode}
-        onLogout={onLogout}
-        // 🛠️ 'userRole' હટાવી દીધો જેથી સાઇડબારની TS Error સોલ્વ થઈ જાય
-      />
+
       <main className="flex-1 overflow-auto relative">
         {renderContent()}
         
