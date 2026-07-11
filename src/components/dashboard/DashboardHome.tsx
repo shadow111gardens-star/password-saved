@@ -102,7 +102,7 @@ export default function DashboardHome({ passwords, setView }: DashboardHomeProps
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
-        {/* Security Score */}
+        {/* Security Score *
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -147,7 +147,61 @@ export default function DashboardHome({ passwords, setView }: DashboardHomeProps
               </button>
             </div>
           </div>
-        </motion.div>
+        </motion.div>*/}
+
+        {/* 🚀 ફક્ત આટલા જ Security Score બ્લોકને બદલો */}
+<motion.div
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ delay: 0.2 }}
+  className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800"
+>
+  <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">Security Score</h3>
+  
+  <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left">
+    
+    {/* સર્કલ ચાર્ટ */}
+    <div className="relative w-24 h-24 shrink-0">
+      <svg className="w-24 h-24 -rotate-90" viewBox="0 0 36 36">
+        <path
+          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+          fill="none"
+          stroke="#e2e8f0"
+          className="dark:stroke-slate-800"
+          strokeWidth="3"
+        />
+        <path
+          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+          fill="none"
+          stroke={stats.securityScore >= 80 ? '#10b981' : stats.securityScore >= 50 ? '#f59e0b' : '#ef4444'}
+          strokeWidth="3"
+          strokeDasharray={`${stats.securityScore}, 100`}
+          strokeLinecap="round"
+        />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className="text-lg font-bold text-slate-900 dark:text-white">{stats.securityScore}</span>
+      </div>
+    </div>
+
+    {/* લખાણ વિગતો */}
+    <div className="flex flex-col items-center sm:items-start flex-1 min-w-0">
+      <p className="text-sm font-medium text-slate-900 dark:text-white">
+        {stats.securityScore >= 80 ? 'Excellent' : stats.securityScore >= 50 ? 'Good' : 'Needs Attention'}
+      </p>
+      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 break-words w-full">
+        {stats.weak > 0 ? `${stats.weak} weak passwords found` : 'All passwords are strong'}
+      </p>
+      <button
+        onClick={() => setView('security')}
+        className="mt-2 text-xs font-medium text-primary-600 hover:text-primary-700 flex items-center gap-1 justify-center sm:justify-start"
+      >
+        View details <ArrowRight className="w-3 h-3" />
+      </button>
+    </div>
+
+  </div>
+</motion.div>
 
         {/* Quick Actions */}
         <motion.div

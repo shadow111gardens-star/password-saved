@@ -1,4 +1,3 @@
-// src/components/Sidebar.tsx
 import {
   LayoutDashboard,
   Lock,
@@ -21,7 +20,6 @@ interface SidebarProps {
   setView: (v: ViewType) => void;
   darkMode: boolean;
   onLogout: () => void;
-  // 🚀 મોબાઈલ વ્યુ બંધ કરવા માટેના નવા પ્રોપ્સ ઉમેર્યા
   isMobile?: boolean;
   closeMobileMenu?: () => void;
 }
@@ -55,18 +53,14 @@ export default function Sidebar({
   const handleNavigation = (view: ViewType) => {
     setView(view);
     if (isMobile && closeMobileMenu) {
-      closeMobileMenu(); // મોબાઈલમાં ક્લિક થતા જ મેનુ આપોઆપ બંધ થઈ જશે
+      closeMobileMenu();
     }
   };
 
   return (
-    <div
-      className={`w-full h-full flex flex-col justify-between ${
-        darkMode ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'
-      }`}
-    >
+    <div className={`w-full h-full flex flex-col justify-between ${darkMode ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}`}>
       <div className="flex flex-col flex-1">
-        {/* Logo and Close Button Header */}
+        {/* Header (Logo + Close Button) */}
         <div className="p-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-primary-600 flex items-center justify-center">
@@ -76,8 +70,6 @@ export default function Sidebar({
               VaultPass
             </span>
           </div>
-          
-          {/* 🚀 જો મોબાઈલ સ્ક્રીન હોય તો જ ચોકડી (X) બટન દેખાશે */}
           {isMobile && closeMobileMenu && (
             <button 
               onClick={closeMobileMenu}
@@ -88,7 +80,7 @@ export default function Sidebar({
           )}
         </div>
 
-        {/* Main Menu */}
+        {/* Navigation Link Area */}
         <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
           {menuItems.map((item) => (
             <button
@@ -109,7 +101,7 @@ export default function Sidebar({
         </nav>
       </div>
 
-      {/* Bottom Menu: પ્રોપર કલર અને બોર્ડર સેટિંગ */}
+      {/* Bottom Option Area (Fix: No blue/black boxes anymore) */}
       <div className={`p-3 space-y-1 border-t ${darkMode ? 'border-slate-800 bg-slate-900' : 'border-slate-100 bg-white'}`}>
         {bottomItems.map((item) => (
           <button
