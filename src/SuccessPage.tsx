@@ -72,9 +72,9 @@ const SuccessPage = () => {
 
           console.log("✅ Firestore Updated Successfully");
 
-          alert("🎉 Payment Successful! You are now a Pro user.");
+          //alert("🎉 Payment Successful! You are now a Pro user.");
 
-          navigate("/dashboard", { replace: true });
+          navigate("/", { replace: true });
         } catch (firestoreError) {
           console.error("❌ Firestore Error:", firestoreError);
         }
