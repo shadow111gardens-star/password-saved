@@ -259,14 +259,21 @@ export default function Dashboard({
           {/* બેકગ્રાઉન્ડ ઓવરલે બ્લર */}
           <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)} />
           
-          <div className="fixed inset-y-0 left-0 w-64 bg-white dark:bg-slate-900 shadow-xl flex flex-col max-w-[80vw]">
-            <button 
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-600 rounded-lg"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            <div className="h-full pt-4">
+          {/* 🚀 ફિક્સ ૧: h-full અને overflow-hidden આપ્યું જેથી નીચેનો ડાર્ક ભાગ હટી જાય */}
+          <div className="fixed inset-y-0 left-0 w-64 bg-white dark:bg-slate-900 shadow-xl flex flex-col max-w-[80vw] h-full overflow-hidden">
+            
+            {/* 🚀 ફિક્સ ૨: ક્લોઝ (X) બટનને પ્રોપર ઉપર પૅડિંગ સાથે સેટ કર્યું */}
+            <div className="flex items-center justify-end p-4 border-b border-slate-100 dark:border-slate-800">
+              <button 
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* 🚀 ફિક્સ ૩: મેનુ લિસ્ટને ડ્રોવરની અંદર જ રાખવા માટે સ્ક્રોલ આપ્યું */}
+            <div className="flex-1 overflow-y-auto">
               <Sidebar currentView={view} setView={handleViewChange} darkMode={darkMode} onLogout={onLogout} />
             </div>
           </div>
