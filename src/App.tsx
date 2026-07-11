@@ -166,7 +166,7 @@ export default function App() {
 }*/}
 
 import { useState, useCallback, useEffect } from 'react';
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'; // 🚀 useNavigate અને useLocation ઉમેર્યું
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'; 
 import type { ViewType, PasswordEntry } from './types';
 import { CATEGORIES } from './types';
 import LandingPage from './components/LandingPage';
@@ -214,7 +214,6 @@ export default function App() {
         const savedView = localStorage.getItem('currentView');
         setView(savedView && savedView !== 'landing' ? (savedView as ViewType) : 'dashboard');
         
-        // 🚀 જો યુઝર ડાયરેક્ટ લીગલ પેજ પર ન હોય, તો જ ડેશબોર્ડ પર મોકલો
         if (location.pathname === '/') {
           navigate('/');
         }
@@ -237,6 +236,7 @@ export default function App() {
     return () => unsubscribeSnapshot();
   }, [user]);
 
+  // 🚀 ફિક્સ: ફાયરબેઝમાંથી કસ્ટમ કેટેગરીઝ પણ રિયલ-ટાઇમ લોડ થશે
   useEffect(() => {
     if (!user) { setUserProfile(null); return; }
     const userDocRef = doc(db, 'users', user.uid);
@@ -246,6 +246,8 @@ export default function App() {
         setUserProfile(data);
         if (data.autoLock !== undefined) setAutoLock(data.autoLock);
         if (data.timeoutMinutes !== undefined) setTimeoutMinutes(data.timeoutMinutes);
+        // ફાયરબેઝમાંથી એરે લોડ કરીને સ્ટેટમાં સેટ કરો
+        if (data.customCategories !== undefined) setCustomCategories(data.customCategories);
       }
     });
     return () => unsubscribeUser();
@@ -289,22 +291,57 @@ export default function App() {
     setPasswords((prev) => prev.filter((p) => p.id !== id));
   }, [user]);
   
-  const toggleFavorite = useCallback((id: string) => {
-    setPasswords((prev) => prev.map((p) => (p.id === id ? { ...p, favorite: !p.favorite } : p)));
-  }, []);
+  const toggleFavorite = useCallback(async (id: string) => {
+    if (!user) return;
+    
+    const currentPassword = passwords.find(p => p.id === id);
+    if (!currentPassword) return;
 
-  const addCustomCategory = useCallback((category: string) => {
-    setCustomCategories((prev) => (prev.includes(category) || CATEGORIES.includes(category) ? prev : [...prev, category]));
-  }, []);
+    try {
+      const passwordDocRef = doc(db, 'users', user.uid, 'passwords', id);
+      await updateDoc(passwordDocRef, {
+        favorite: !currentPassword.favorite,
+        updatedAt: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Error updating favorite status:", error);
+    }
+  }, [user, passwords]);
 
-  const removeCustomCategory = useCallback((category: string) => {
-    setCustomCategories((prev) => prev.filter((c) => c !== category));
-    setPasswords((prev) => prev.map((p) => (p.category === category ? { ...p, category: 'Other' } : p)));
-  }, []);
+  // 🚀 ફિક્સ: કસ્ટમ કેટેગરી ફાયરબેઝમાં કાયમ માટે સ્ટોર થશે
+  const addCustomCategory = useCallback(async (category: string) => {
+    if (!user) return;
+    if (customCategories.includes(category) || CATEGORIES.includes(category)) return;
+
+    const updatedCategories = [...customCategories, category];
+    
+    try {
+      const userDocRef = doc(db, 'users', user.uid);
+      await updateDoc(userDocRef, { customCategories: updatedCategories });
+    } catch (error) {
+      console.error("Error adding custom category:", error);
+    }
+  }, [user, customCategories]);
+
+  // 🚀 ફિક્સ: ફાયરબેઝમાંથી કસ્ટમ કેટેગરી રીમુવ થશે
+  const removeCustomCategory = useCallback(async (category: string) => {
+    if (!user) return;
+
+    const updatedCategories = customCategories.filter((c) => c !== category);
+
+    try {
+      const userDocRef = doc(db, 'users', user.uid);
+      await updateDoc(userDocRef, { customCategories: updatedCategories });
+      
+      // જે પાસવર્ડ આ કેટેગરીમાં હતા તેને ટેમ્પરરી 'Other' કરી દો
+      setPasswords((prev) => prev.map((p) => (p.category === category ? { ...p, category: 'Other' } : p)));
+    } catch (error) {
+      console.error("Error removing custom category:", error);
+    }
+  }, [user, customCategories]);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600"></div></div>;
 
-  // 🚀 ક્લીન અને પરફેક્ટ રાઉટીંગ ઇમ્પ્લીમેન્ટેશન
   return (
     <Routes>
       <Route path="/privacy" element={<Privacy />} />
