@@ -253,34 +253,27 @@ export default function Dashboard({
       </button>
     </div>
 
-    {/* 2. 📱 મોબાઈલ સાઇડબાર ડ્રોવર (પરફેક્ટ ફિક્સ) */}
+    {/* 2. 📱 મોબાઈલ સાઇડબાર ડ્રોવર (વધારાનો કોડ હાઈડ કરીને એકદમ ક્લીન ફિક્સ કર્યો) */}
     {isMobileMenuOpen && (
       <div className="fixed inset-0 z-50 md:hidden">
-        {/* ઓવરલે બ્લર: આખી સ્ક્રીનને કવર કરશે */}
+        {/* ઓવરલે બ્લર */}
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)} />
         
-        {/* મેનુ કન્ટેનર: h-full, bg-white અને ફિક્સ પોઝિશન સાથે, જેથી નીચે સુધી પ્રોપર વ્હાઇટ જ રહે */}
+        {/* સાઇડબાર કન્ટેનર: h-screen અને bg-white જેથી નીચેનો ભાગ પૂરો વ્હાઇટ જ રહેશે */}
         <div className="fixed inset-y-0 left-0 flex flex-col w-64 max-w-[80vw] bg-white dark:bg-slate-900 shadow-xl z-50">
-          
-          {/* ક્લોઝ (X) બટન હેડર */}
-          <div className="flex items-center justify-end p-4 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
-            <button 
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* લિસ્ટ એરિયા: ડ્રોવરની અંદર જ સ્ક્રોલ થાય તે માટે */}
-          <div className="flex-1 overflow-y-auto bg-white dark:bg-slate-900">
-            <Sidebar currentView={view} setView={handleViewChange} darkMode={darkMode} onLogout={onLogout} />
-          </div>
+          <Sidebar 
+            currentView={view} 
+            setView={handleViewChange} 
+            darkMode={darkMode} 
+            onLogout={onLogout} 
+            isMobile={true} 
+            closeMobileMenu={() => setIsMobileMenuOpen(false)} 
+          />
         </div>
       </div>
     )}
 
-    {/* 3. 💻 ડેસ્કટોપ સાઇડબાર (અલગ બેકગ્રાઉન્ડ કલર અને ૧ રાઇટ બોર્ડર સાથે) */}
+    {/* 3. 💻 ડેસ્કટોપ સાઇડબાર (અલગ બેકગ્રાઉન્ડ કલર અને ૧ પ્રોપર રાઇટ બોર્ડર સાથે) */}
     <aside className="hidden md:block w-64 shrink-0 sticky top-0 h-screen bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800">
       <Sidebar currentView={view} setView={setView} darkMode={darkMode} onLogout={onLogout} />
     </aside>
