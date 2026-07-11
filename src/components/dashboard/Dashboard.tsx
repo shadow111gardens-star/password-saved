@@ -235,90 +235,90 @@ export default function Dashboard({
   };
 
   return (
-    <div className={`min-h-screen flex flex-col md:flex-row ${darkMode ? 'bg-slate-900' : 'bg-slate-50'}`}>
-      
-      {/* 1. 📱 મોબાઈલ માટે ટોપ બાર હેડર (ફક્ત મોબાઈલમાં જ દેખાશે) */}
-      <div className="md:hidden flex items-center justify-between bg-white dark:bg-slate-900 px-4 py-4 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-md bg-primary-600 flex items-center justify-center">
-            <Shield className="w-4 h-4 text-white" />
-          </div>
-          <span className="font-semibold text-slate-900 dark:text-white text-base">VaultPass</span>
+  <div className={`min-h-screen flex flex-col md:flex-row ${darkMode ? 'bg-slate-900' : 'bg-slate-50'}`}>
+    
+    {/* 1. 📱 મોબાઈલ ટોપ બાર */}
+    <div className="md:hidden flex items-center justify-between bg-white dark:bg-slate-900 px-4 py-4 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40">
+      <div className="flex items-center gap-2">
+        <div className="w-7 h-7 rounded-md bg-primary-600 flex items-center justify-center">
+          <Shield className="w-4 h-4 text-white" />
         </div>
-        <button 
-          onClick={() => setIsMobileMenuOpen(true)}
-          className="p-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
-        >
-          <Menu className="w-6 h-6" />
-        </button>
+        <span className="font-semibold text-slate-900 dark:text-white text-base">VaultPass</span>
       </div>
+      <button 
+        onClick={() => setIsMobileMenuOpen(true)}
+        className="p-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+      >
+        <Menu className="w-6 h-6" />
+      </button>
+    </div>
 
-      {/* 2. 📱 મોબાઈલ સાઇડબાર ડ્રોવર (મેનુ ઓપન થાય ત્યારે જ દેખાશે) */}
-      {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
-          {/* બેકગ્રાઉન્ડ ઓવરલે બ્લર */}
-          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)} />
+    {/* 2. 📱 મોબાઈલ સાઇડબાર ડ્રોવર (પરફેક્ટ ફિક્સ) */}
+    {isMobileMenuOpen && (
+      <div className="fixed inset-0 z-50 md:hidden">
+        {/* ઓવરલે બ્લર: આખી સ્ક્રીનને કવર કરશે */}
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)} />
+        
+        {/* મેનુ કન્ટેનર: h-full, bg-white અને ફિક્સ પોઝિશન સાથે, જેથી નીચે સુધી પ્રોપર વ્હાઇટ જ રહે */}
+        <div className="fixed inset-y-0 left-0 flex flex-col w-64 max-w-[80vw] bg-white dark:bg-slate-900 shadow-xl z-50">
           
-          {/* 🚀 ફિક્સ ૧: h-full અને overflow-hidden આપ્યું જેથી નીચેનો ડાર્ક ભાગ હટી જાય */}
-          <div className="fixed inset-y-0 left-0 w-64 bg-white dark:bg-slate-900 shadow-xl flex flex-col max-w-[80vw] h-full overflow-hidden">
-            
-            {/* 🚀 ફિક્સ ૨: ક્લોઝ (X) બટનને પ્રોપર ઉપર પૅડિંગ સાથે સેટ કર્યું */}
-            <div className="flex items-center justify-end p-4 border-b border-slate-100 dark:border-slate-800">
-              <button 
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+          {/* ક્લોઝ (X) બટન હેડર */}
+          <div className="flex items-center justify-end p-4 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
+            <button 
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
 
-            {/* 🚀 ફિક્સ ૩: મેનુ લિસ્ટને ડ્રોવરની અંદર જ રાખવા માટે સ્ક્રોલ આપ્યું */}
-            <div className="flex-1 overflow-y-auto">
-              <Sidebar currentView={view} setView={handleViewChange} darkMode={darkMode} onLogout={onLogout} />
+          {/* લિસ્ટ એરિયા: ડ્રોવરની અંદર જ સ્ક્રોલ થાય તે માટે */}
+          <div className="flex-1 overflow-y-auto bg-white dark:bg-slate-900">
+            <Sidebar currentView={view} setView={handleViewChange} darkMode={darkMode} onLogout={onLogout} />
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* 3. 💻 ડેસ્કટોપ સાઇડબાર (અલગ બેકગ્રાઉન્ડ કલર અને ૧ રાઇટ બોર્ડર સાથે) */}
+    <aside className="hidden md:block w-64 shrink-0 sticky top-0 h-screen bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800">
+      <Sidebar currentView={view} setView={setView} darkMode={darkMode} onLogout={onLogout} />
+    </aside>
+
+    {/* 4. 📦 મેઈન કન્ટેન્ટ એરિયા */}
+    <main className="flex-1 overflow-x-hidden p-4 sm:p-6 lg:p-8 relative">
+      {renderContent()}
+      
+      {/* Auto Lock Overlay */}
+      {isLocked && (
+        <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 max-w-sm w-full text-center">
+            <div className="w-16 h-16 rounded-2xl bg-primary-50 flex items-center justify-center mx-auto mb-4">
+              <Lock className="w-8 h-8 text-primary-600" />
+            </div>
+            <h2 className="text-xl font-bold text-slate-900 mb-2">Vault Locked</h2>
+            <p className="text-sm text-slate-500 mb-6">
+              Your vault was automatically locked due to inactivity.
+            </p>
+            <div className="space-y-3">
+              <button
+                onClick={handleUnlock}
+                className="w-full flex items-center justify-center gap-2 py-3 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-xl transition-colors"
+              >
+                <Unlock className="w-4 h-4" />
+                Unlock Vault
+              </button>
+              <button
+                onClick={onLogout}
+                className="w-full py-3 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
+              >
+                Logout
+              </button>
             </div>
           </div>
         </div>
       )}
-
-      {/* 3. 💻 ડેસ્કટોપ સાઇડબાર (મોટા સ્ક્રીન પર નોર્મલ દેખાશે) */}
-      <aside className="hidden md:block w-64 shrink-0 sticky top-0 h-screen border-r border-slate-200 dark:border-slate-800">
-        <Sidebar currentView={view} setView={setView} darkMode={darkMode} onLogout={onLogout} />
-      </aside>
-
-      {/* 4. 📦 મેઈન કન્ટેન્ટ એરિયા (વર્કિંગ સ્પેસ) */}
-      <main className="flex-1 overflow-x-hidden p-4 sm:p-6 lg:p-8 relative">
-        {renderContent()}
-        
-        {/* Auto Lock Overlay */}
-        {isLocked && (
-          <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 max-w-sm w-full text-center">
-              <div className="w-16 h-16 rounded-2xl bg-primary-50 flex items-center justify-center mx-auto mb-4">
-                <Lock className="w-8 h-8 text-primary-600" />
-              </div>
-              <h2 className="text-xl font-bold text-slate-900 mb-2">Vault Locked</h2>
-              <p className="text-sm text-slate-500 mb-6">
-                Your vault was automatically locked due to inactivity.
-              </p>
-              <div className="space-y-3">
-                <button
-                  onClick={handleUnlock}
-                  className="w-full flex items-center justify-center gap-2 py-3 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-xl transition-colors"
-                >
-                  <Unlock className="w-4 h-4" />
-                  Unlock Vault
-                </button>
-                <button
-                  onClick={onLogout}
-                  className="w-full py-3 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
-                >
-                  Logout
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </main>
-    </div>
-  );
+    </main>
+  </div>
+);
 }
