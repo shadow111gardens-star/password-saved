@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
@@ -7,6 +7,7 @@ import { db } from "./firebase";
 const SuccessPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const [statusMessage, setStatusMessage] = useState("Please wait while we verify your payment.");
 
   const checkoutId = searchParams.get("checkout_id");
 
@@ -18,47 +19,42 @@ const SuccessPage = () => {
 
   const verifyAndUpgrade = async (id: string) => {
     try {
-      console.log("🚀 Starting payment verification...");
-      console.log("Checkout ID:", id);
-
-      //const response = await fetch(
-        //`https://api.polar.sh/v1/checkouts/${id}`,
-
-        const response = await fetch(
-        `https://sandbox-api.polar.sh/v1/checkouts/${id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${import.meta.env.VITE_POLAR_API_TOKEN}`,
-          },
-        }
-      );
-
-      console.log("API Status:", response.status);
-
-      const data = await response.json();
-
-      console.log("========== POLAR RESPONSE ==========");
-      console.log(data);
-      console.log("Checkout Status:", data.status);
-      console.log("Metadata:", data.metadata);
-
-      if (data.status !== "succeeded") {
-        console.log("❌ Payment is not succeeded.");
-        return;
-      }
+      console.log("🚀 Starting payment verification via Vercel Backend...");
+      setStatusMessage("Verifying your payment with Polar...");
 
       const auth = getAuth();
 
+      // પહેલા ચેક કરીએ કે યુઝર લોગ્ડ-ઈન છે કે નહીં
       onAuthStateChanged(auth, async (user) => {
-        console.log("========== FIREBASE USER ==========");
-        console.log(user);
-
         if (!user) {
           console.error("❌ No logged in user found.");
+          setStatusMessage("Error: No logged in user found. Please login again.");
           return;
         }
 
         console.log("Firebase UID:", user.uid);
+
+        // આપણા Vercel Serverless API ને કોલ કરીએ (આમાં કોઈ સિક્રેટ કી બ્રાઉઝરમાં નહીં દેખાય)
+        const response = await fetch("/api/verify-polar", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ checkoutId: id }),
+        });
+
+        console.log("Backend API Status:", response.status);
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          console.log("❌ Payment verification failed on backend:", data.error || data.message);
+          setStatusMessage("Payment verification failed. If amount was deducted, please contact support.");
+          return;
+        }
+
+        // જો બેકએન્ડ હા પાડે, તો જ ફ્રન્ટએન્ડથી ફાયરસ્ટોર અપડેટ સેફલી થશે
+        console.log("✅ Backend verified successfully. Upgrading user in Firestore...");
+        setStatusMessage("Payment verified! Upgrading your account to Pro...");
 
         try {
           await setDoc(
@@ -70,18 +66,16 @@ const SuccessPage = () => {
             { merge: true }
           );
 
-          console.log("✅ Firestore Updated Successfully");
-
-          //alert("🎉 Payment Successful! You are now a Pro user.");
-
+          console.log("🎉 Firestore Updated Successfully");
           navigate("/", { replace: true });
         } catch (firestoreError) {
           console.error("❌ Firestore Error:", firestoreError);
+          setStatusMessage("Account upgraded failed in database. Please contact support.");
         }
       });
     } catch (error) {
       console.error("❌ Verification Error:", error);
-      alert("Payment verification failed.");
+      setStatusMessage("An unexpected error occurred during verification.");
     }
   };
 
@@ -92,11 +86,12 @@ const SuccessPage = () => {
         placeItems: "center",
         minHeight: "100vh",
         textAlign: "center",
+        fontFamily: "sans-serif"
       }}
     >
       <div>
-        <h2>Payment Verification...</h2>
-        <p>Please wait while we verify your payment.</p>
+        <h2>Payment Verification</h2>
+        <p>{statusMessage}</p>
       </div>
     </div>
   );
