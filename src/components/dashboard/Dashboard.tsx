@@ -161,18 +161,8 @@ export default function Dashboard({
         </p>
         {/*polar payment code link*/}
 
-         {/* <a 
-            href="https://buy.polar.sh/polar_cl_rDDltiKpUAjRpx4G51Gk4EepdXwOic1DDka4B2S46QJ" 
-            target="_blank" 
-            rel="noopener noreferrer"
-          >
-            <button className="px-6 py-3 font-semibold text-white bg-gradient-to-r from-amber-500 to-orange-600 rounded-xl shadow-lg hover:opacity-90 transition-opacity">
-              Upgrade to Pro ⭐
-            </button>
-          </a>*/}
-
           <a 
-            href={`https://sandbox-api.polar.sh/v1/checkout-links/polar_cl_wGBEtq9aBZ3wt5qTo9fuYaobKtqJYlIb71uX846NQHs/redirect?customer_email=${encodeURIComponent(currentUser?.email || '')}&metadata[firebase_uid]=${currentUser?.uid}`} 
+            href="https://buy.polar.sh/polar_cl_rDDltiKpUAjRpx4G51Gk4EepdXwOic1DDka4B2S46QJ" 
             target="_blank" 
             rel="noopener noreferrer"
           >
