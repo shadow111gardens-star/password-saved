@@ -35,7 +35,7 @@ const features = [
   },
   {
     icon: Shield,
-    title: 'Military Grade Encryption',
+    title: 'AES-256 Encryption',
     description: 'Passwords encrypted with AES-256 before storage.',
     color: 'bg-emerald-50 text-emerald-600',
   },
