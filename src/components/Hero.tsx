@@ -66,12 +66,23 @@ export default function Hero({ onGetStarted }: HeroProps) {
               transition={{ duration: 0.5, delay: 0.3 }}
               className="mt-8 flex flex-col sm:flex-row gap-3 justify-center lg:justify-start"
             >
-              <button onClick={onGetStarted} className="px-6 py-3 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-xl transition-all shadow-lg shadow-primary-200 hover:shadow-xl hover:shadow-primary-200 hover:-translate-y-0.5">
+              <button 
+                  onClick={onGetStarted} 
+                  className="flex items-center justify-center gap-3 px-6 py-3 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-xl transition-all shadow-lg shadow-primary-200 hover:shadow-xl hover:shadow-primary-200 hover:-translate-y-0.5"
+                >
+                  {/* Inline SVG - કોઈ પાથની જરૂર નથી */}
+                  <svg className="w-5 h-5" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C33.7 4.5 29.2 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.1-2.7-.5-4z" fill="white"/>
+                  </svg>
+                  Login with Google
+                </button>
+              
+              {/*<button onClick={onGetStarted} className="px-6 py-3 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-xl transition-all shadow-lg shadow-primary-200 hover:shadow-xl hover:shadow-primary-200 hover:-translate-y-0.5">
                 Login with Google
-              </button>
+              </button>*/}
               {/*<button className="px-6 py-3 text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2">
                 <Play className="w-4 h-4" />
-                Watch Demo
+                Get Started 
               </button>*/}
             </motion.div>
 

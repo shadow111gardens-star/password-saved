@@ -63,7 +63,7 @@ export default function Navbar({ onGetStarted }: NavbarProps) {
               onClick={onGetStarted} 
               className="px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors shadow-sm"
             >
-              Get Started
+              Sign Up
             </button>
           </div>
 
@@ -121,7 +121,7 @@ export default function Navbar({ onGetStarted }: NavbarProps) {
                   }} 
                   className="w-full px-4 py-3 text-base font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors"
                 >
-                  Get Started
+                  Sign Up
                 </button>
               </div>
             </div>
