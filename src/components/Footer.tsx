@@ -1,5 +1,5 @@
 import { Shield } from 'lucide-react';
-import { Link } from "react-router-dom"; // ૧. Link ઇમ્પોર્ટ થઈ ગયું
+import { Link } from "react-router-dom";
 
 const footerLinks = {
   Product: [
@@ -9,19 +9,22 @@ const footerLinks = {
     { label: 'FAQ', href: '#faq' },
   ],
   Legal: [
-    { label: 'Privacy', href: '/privacy' }, // ૨. અહીં પાથ સેટ થઈ ગયો
+    { label: 'Privacy', href: '/privacy' },
     { label: 'Terms', href: '/terms' },
     { label: 'Support', href: '/support' },
   ],
 };
 
 const socialLinks = [
-  { render: () => (
-    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-    </svg>
-  ), href: 'https://x.com/abhay8769', 
-     label: 'Twitter' },
+  { 
+    render: () => (
+      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+      </svg>
+    ), 
+    href: 'https://x.com/abhay8769', 
+    label: 'Twitter' 
+  },
 ];
 
 export default function Footer() {
@@ -40,7 +43,9 @@ export default function Footer() {
             <p className="text-sm text-slate-500 max-w-xs leading-relaxed">
               Securely store, organize, and manage all your passwords in one encrypted vault.
             </p>
-            <div className="flex gap-3 mt-5">
+            
+            {/* Twitter અને ListBulb એક જ લાઈનમાં */}
+            <div className="flex items-center gap-4 mt-5">
               {socialLinks.map((social) => (
                 <a
                   key={social.label}
@@ -53,6 +58,10 @@ export default function Footer() {
                   <social.render />
                 </a>
               ))}
+              
+              <a href="https://www.listbulb.com/tools/vaultpass" target="_blank" rel="noopener">
+                <img src="https://www.listbulb.com/featured-on-listbulb-light.svg" alt="Featured on ListBulb" className="h-9" />
+              </a>
             </div>
           </div>
 
@@ -63,7 +72,6 @@ export default function Footer() {
               <ul className="space-y-2.5">
                 {links.map((link) => (
                   <li key={link.label}>
-                    {/* ૩. અહીં કન્ડિશનલ રાઉટિંગ સેટ થઈ ગયું */}
                     {link.href.startsWith('/') ? (
                       <Link
                         to={link.href}
