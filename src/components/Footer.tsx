@@ -59,9 +59,9 @@ export default function Footer() {
                 </a>
               ))}
               
-              {/* List Bulb Badge */}
+              {/* ListBulb Official Embed - આ કોડ જ વાપરો */}
                   <a href="https://www.listbulb.com/tools/vaultpass" target="_blank" rel="noopener">
-                    <img src="https://www.listbulb.com/featured-on-listbulb-light.svg" alt="Featured on ListBulb" height="40" />
+                    <img src="https://www.listbulb.com/featured-on-listbulb-light.svg" alt="Featured on ListBulb" className="h-8 w-auto"/>
                   </a>
             </div>
           </div>
