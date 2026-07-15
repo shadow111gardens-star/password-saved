@@ -59,9 +59,10 @@ export default function Footer() {
                 </a>
               ))}
               
-              <a href="https://www.listbulb.com/tools/vaultpass" target="_blank" rel="noopener">
-                <img src="https://www.listbulb.com/featured-on-listbulb-light.svg" alt="Featured on ListBulb" className="h-9" />
-              </a>
+              {/* List Bulb Badge */}
+                  <a href="https://www.listbulb.com/tools/vaultpass" target="_blank" rel="noopener">
+                    <img src="https://www.listbulb.com/featured-on-listbulb-light.svg" alt="Featured on ListBulb" height="40" />
+                  </a>
             </div>
           </div>
 
